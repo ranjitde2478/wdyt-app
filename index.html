@@ -816,16 +816,24 @@ function submitNameAndFinish(){
 
 // ---------- STORAGE ----------
 async function saveResponses(){
-  if(!window.storage || typeof window.storage.set !== 'function'){ return; }
-  const payload = { testerName:state.testerName, testerId:state.testerId, completedAt:new Date().toISOString(),
-    simCorrect:state.simCorrect, simTotal:state.simTotal, responses:state.responses };
-  try{ await window.storage.set('responses:' + state.testerId, JSON.stringify(payload), true); }catch(e){}
+  // Fire-and-forget: if this fails for any reason, the visitor still sees
+  // their finished card. We never let tracking break the actual experience.
   try{
-    let indexList = [];
-    try{ const existing = await window.storage.get('tester_index', true); if(existing && existing.value){ indexList = JSON.parse(existing.value); } }catch(e){ indexList = []; }
-    indexList.push({ testerId:state.testerId, testerName:state.testerName, completedAt:payload.completedAt });
-    await window.storage.set('tester_index', JSON.stringify(indexList), true);
-  }catch(e){}
+    const payload = {
+      testerName: state.testerName,
+      testerId: state.testerId,
+      completedAt: new Date().toISOString(),
+      simCorrect: state.simCorrect,
+      simTotal: state.simTotal,
+      vibeTitle: state.lockedArchetype ? state.lockedArchetype.title : null,
+      responses: state.responses
+    };
+    await fetch('/api/save-response', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  }catch(e){ /* silently ignore -- tracking failures should never surface to the visitor */ }
 }
 
 // ---------- REPORT ----------
@@ -860,7 +868,6 @@ async function generateAndShowCard(){
   // generated once at the end. Everything below is requested in a single call.
   goTo('screen-loading');
   startLoadingCycle();
-  await saveResponses();
 
   const breadth = {}; const skillCounts = {};
   state.responses.forEach(r => {
@@ -914,6 +921,8 @@ async function generateAndShowCard(){
 
   if(apiResult && apiResult.archetype){ state.lockedArchetype = apiResult.archetype; state.lockedSoWhat = apiResult.soWhat || fallbackSoWhat(); }
   else { state.lockedArchetype = fallbackArchetype(); state.lockedSoWhat = fallbackSoWhat(); }
+
+  await saveResponses();
 
   if(apiResult && apiResult.whereIStand && apiResult.whereIStand.length){
     state.lockedWhereIStand = apiResult.whereIStand.slice(0, THEME_COUNT);
