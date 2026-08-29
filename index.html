@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#000000">
+<title>What Do You Think?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#000000; --card:#151515; --cream:#FFFFFF; --gray:#9A9A9A; --acid:#DFFF3C;
+    --font-display:'Space Grotesk',sans-serif; --font-body:'Plus Jakarta Sans',sans-serif; --font-logo:'Poppins',sans-serif; }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none;}
+  .grain{ position:fixed; top:0; left:0; right:0; bottom:0; z-index:80; pointer-events:none; opacity:0.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  html{ color-scheme:dark; }
+  html,body{ height:100%; min-height:100vh; margin:0; overflow:hidden; overscroll-behavior:none; background:var(--ink); }
+  body{ font-family:var(--font-body); background:var(--ink); color:#fff; }
+  .screen{ display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:var(--ink); flex-direction:column; }
+  .screen.active{ display:flex; }
+
+  .stage-bg{ position:fixed; top:0; left:0; right:0; bottom:0; background:var(--ink); transition:background 0.5s ease; z-index:0; }
+  .stage-glow{ display:none; }
+  @keyframes glowDrift{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(6%,8%) scale(1.12); } }
+  .stage-overlay{ display:none; }
+  .stage-content{ position:relative; z-index:2; flex:1; display:flex; flex-direction:column; height:100%; touch-action:none; }
+
+  .segbar{ display:flex; gap:4px; padding:14px 12px 0; }
+  .seg{ flex:1; height:3px; background:rgba(255,255,255,0.22); }
+  .seg-fill{ height:100%; background:var(--acid); width:0%; transition:width 0.15s linear; }
+  .back-hint{ text-align:center; font-family:var(--font-display); font-size:10.5px; opacity:0.5; font-weight:700; padding:6px 0 0; letter-spacing:0.6px; text-transform:uppercase; }
+  .mute-btn{ position:absolute; top:12px; right:14px; width:32px; height:32px; border-radius:0; border:1.5px solid rgba(255,255,255,0.4); background:transparent; color:#fff; font-size:14px; display:flex; align-items:center; justify-content:center; z-index:4; }
+  .skill-chip{ position:absolute; top:12px; left:14px; border:1.5px solid var(--acid); color:var(--acid); background:transparent; padding:4px 10px; font-family:var(--font-display); font-size:10px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; z-index:4; }
+
+  .drag-zone{ flex:1; position:relative; overflow:hidden; }
+  .drag-layer{ position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; will-change:transform,opacity; }
+
+  .stage-tap-inner{ flex:1; display:flex; align-items:center; justify-content:center; padding:34px 26px; text-align:center; }
+  .hook{ font-family:var(--font-display); font-size:32px; font-weight:700; line-height:1.2; letter-spacing:-0.6px; text-shadow:0 2px 16px rgba(0,0,0,0.45); animation:kickIn 0.4s cubic-bezier(.22,1.4,.36,1); }
+  .story{ font-family:var(--font-body); font-size:19px; line-height:1.5; font-weight:500; text-shadow:0 2px 12px rgba(0,0,0,0.4); animation:kickIn 0.4s cubic-bezier(.22,1.4,.36,1); }
+  @keyframes kickIn{ from{ opacity:0; transform:translateY(16px) scale(0.94); } to{ opacity:1; transform:translateY(0) scale(1); } }
+
+  .swipe-cue{ position:absolute; bottom:24px; left:0; right:0; text-align:center; font-size:13px; font-weight:800; letter-spacing:0.4px; text-transform:uppercase; opacity:0.9; }
+  .swipe-cue .chev{ display:inline-block; animation:chevBounce 1.1s ease infinite; }
+  @keyframes chevBounce{ 0%,100%{ transform:translateY(0); opacity:0.5; } 50%{ transform:translateY(-7px); opacity:1; } }
+
+  .icon-badge{ font-size:34px; width:64px; height:64px; margin:0 auto 18px; border:2px solid var(--acid); display:flex; align-items:center; justify-content:center; line-height:1;
+    animation:popBounce .3s cubic-bezier(.34,1.56,.64,1); }
+  .icon-badge.small{ width:52px; height:52px; font-size:26px; margin-bottom:12px; }
+  @keyframes popBounce{ from{ transform:scale(0.6); opacity:0; } to{ transform:scale(1); opacity:1; } }
+
+  .call-wrap{ flex:1; display:flex; flex-direction:column; justify-content:center; padding:22px 22px 0; }
+  .call-q{ font-family:var(--font-display); font-size:24px; font-weight:700; line-height:1.3; letter-spacing:-0.4px; text-align:center; text-shadow:0 2px 12px rgba(0,0,0,0.4); animation:kickIn 0.35s cubic-bezier(.22,1.4,.36,1); margin-bottom:6px; }
+  .call-sub{ text-align:center; font-size:13.5px; opacity:0.8; font-weight:600; margin-bottom:6px; }
+  .options{ padding:16px 18px 30px; display:flex; flex-direction:column; gap:12px; }
+  .opt-pill{ background:transparent; border:2px solid #fff; border-radius:0; padding:17px 18px; color:#fff; font-size:15.5px; font-weight:600; text-align:left; display:flex; align-items:flex-start; gap:14px; transition:transform 0.1s ease, background 0.12s ease, border-color 0.12s ease; }
+  .opt-pill:active{ background:var(--acid); border-color:var(--acid); transform:scale(0.97); }
+  .opt-pill:active *{ color:var(--ink) !important; }
+  .opt-pill.selected{ background:var(--acid); border-color:var(--acid); }
+  .opt-pill.selected *{ color:var(--ink) !important; }
+  .opt-pill.correct{ background:var(--acid); border-color:var(--acid); }
+  .opt-pill.correct *{ color:var(--ink) !important; }
+  .opt-pill.incorrect{ background:transparent; border-color:rgba(255,255,255,0.25); opacity:0.5; }
+  .opt-pill .letter{ width:26px; height:26px; border-radius:0; border:2px solid #fff; background:transparent; color:#fff; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:13px; flex-shrink:0; }
+
+  .sheet-backdrop{ position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:5; display:flex; align-items:flex-end; }
+  .sheet{ background:var(--card); color:#fff; border:2px solid #fff; width:100%; border-radius:0; padding:26px 22px 30px; animation:slideUp .3s cubic-bezier(.65,0,.35,1); }
+  @keyframes slideUp{ from{ transform:translateY(100%); } to{ transform:translateY(0); } }
+  .sheet .label{ font-family:var(--font-display); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--acid); margin-bottom:8px; }
+  .sheet .text{ font-family:var(--font-display); font-size:19px; font-weight:700; line-height:1.4; margin-bottom:20px; }
+  .sheet-btns{ display:flex; gap:10px; }
+  .sheet-btn{ font-family:var(--font-display); flex:1; padding:16px 12px; border-radius:0; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:0.3px; border:2px solid #fff; transition:transform .1s ease; }
+  .sheet-btn:active{ transform:scale(0.96); }
+  .sheet-btn.hold{ background:var(--acid); color:var(--ink); border-color:var(--acid); }
+  .sheet-btn.switch{ background:transparent; color:#fff; }
+  .name-input{ width:100%; padding:15px 16px; font-size:16px; border-radius:0; border:2px solid #fff; margin-bottom:14px; font-family:var(--font-body); color:#fff; background:transparent; }
+
+  .reveal-wrap{ flex:1; display:flex; flex-direction:column; justify-content:center; padding:24px 22px; position:relative; }
+  .reveal-title{ font-family:var(--font-display); text-align:center; font-size:23px; font-weight:700; letter-spacing:-0.4px; margin-bottom:8px; text-shadow:0 2px 12px rgba(0,0,0,0.4); animation:kickIn 0.35s cubic-bezier(.22,1.4,.36,1); }
+  .reveal-sub{ text-align:center; font-size:13.5px; font-weight:600; opacity:0.85; margin-bottom:20px; line-height:1.4; padding:0 6px; }
+  .rbar-row{ margin-bottom:16px; }
+  .rbar-label{ font-family:var(--font-display); font-size:13px; font-weight:700; margin-bottom:7px; display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .rbar-track{ background:rgba(255,255,255,0.12); border-radius:0; height:32px; overflow:hidden; }
+  .rbar-fill{ height:100%; border-radius:0; width:0%; transition:width 0.6s cubic-bezier(.65,0,.35,1); display:flex; align-items:center; justify-content:flex-start; padding-left:12px; font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--ink); }
+  .you-badge{ background:var(--acid); color:var(--ink); font-family:var(--font-display); font-size:10px; font-weight:700; padding:2px 8px; border-radius:0; animation:badgePop .4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes badgePop{ from{ transform:scale(0); } to{ transform:scale(1); } }
+  .burst{ position:absolute; font-size:22px; opacity:0; pointer-events:none; animation:burstFloat 1s ease forwards; }
+  @keyframes burstFloat{ 0%{ opacity:0; transform:translateY(0) scale(0.5); } 20%{ opacity:1; } 100%{ opacity:0; transform:translateY(-70px) scale(1.1); } }
+  .verdict-chip{ text-align:center; font-size:14px; font-weight:800; margin-top:14px; opacity:0; transform:scale(0.8); transition:opacity 0.35s ease, transform 0.35s cubic-bezier(.34,1.56,.64,1); }
+  .verdict-chip.show{ opacity:1; transform:scale(1); }
+  .result-badge{ text-align:center; font-size:44px; margin-bottom:6px; animation:popBounce .5s cubic-bezier(.34,1.56,.64,1); }
+  .result-text{ text-align:center; font-size:15px; line-height:1.5; opacity:0.92; padding:0 14px; margin-bottom:14px; }
+  .track-record{ text-align:center; font-size:13px; font-weight:800; opacity:0.85; letter-spacing:0.3px; margin-top:6px; }
+
+  .full-center{ flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:36px 26px; text-align:center; }
+  .brand-lead{ font-family:var(--font-display); font-size:12.5px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#fff; opacity:0.75; margin-bottom:10px; }
+  .brand-title{ font-family:var(--font-logo); font-size:52px; font-weight:800; letter-spacing:-1.5px; line-height:0.9; margin-bottom:0; }
+  .brand-title .q{ color:var(--acid); display:inline-block; transform:rotate(180deg); }
+  .brand-rule{ width:60px; height:4px; background:var(--acid); margin:20px 0; }
+  .brand-sub{ font-size:16px; opacity:0.85; margin-bottom:30px; max-width:300px; line-height:1.4; font-weight:500; }
+  .cta-btn{ font-family:var(--font-display); background:var(--acid); color:var(--ink); border:none; border-radius:0; padding:19px 44px; font-size:17px; font-weight:700; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:14px; width:100%; max-width:280px; transition:transform .1s ease; }
+  .cta-btn:active{ transform:scale(0.96); }
+  .micro-disclaimer{ font-size:12px; opacity:0.65; max-width:280px; line-height:1.5; }
+  .skill-preview{ display:flex; gap:8px; margin-bottom:26px; flex-wrap:wrap; justify-content:center; max-width:320px; }
+  .skill-preview span{ border:1.5px solid var(--acid); color:var(--acid); background:transparent; padding:6px 11px; font-family:var(--font-display); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
+
+  .loading-wrap{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:600; perspective:600px; }
+  .loading-flip{ font-family:var(--font-logo); font-size:44px; font-weight:800; color:var(--acid); margin-bottom:20px; animation:loadFlip 1.1s cubic-bezier(.65,0,.35,1) infinite; }
+  @keyframes loadFlip{ 0%{ transform:rotateY(0deg); } 50%{ transform:rotateY(180deg); } 100%{ transform:rotateY(360deg); } }
+  #loadingText{ transition:opacity 0.25s ease; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  #screen-report{ background:var(--ink); color:#fff; overflow-y:auto; display:none; }
+  #screen-report.active{ display:flex; }
+  .report-inner{ padding:34px 22px 60px; max-width:520px; margin:0 auto; width:100%; }
+  .badge{ display:inline-block; font-family:var(--font-display); background:var(--acid); color:var(--ink); font-weight:700; font-size:12px; letter-spacing:0.5px; text-transform:uppercase; padding:5px 10px; border-radius:0; margin-bottom:14px; }
+  .report-inner h1{ font-family:var(--font-logo); font-size:24px; font-weight:800; margin:0 0 6px; }
+  .muted{ color:var(--gray); font-size:14px; margin-bottom:6px; }
+  .archetype-banner{ border-top:2px solid var(--acid); border-bottom:2px solid var(--acid); padding:22px 0; margin:18px 0 26px; text-align:center; }
+  .archetype-title{ font-family:var(--font-display); font-size:38px; font-weight:800; letter-spacing:-0.8px; line-height:1.05; margin-bottom:10px; color:var(--acid); }
+  .archetype-sub{ font-family:var(--font-body); font-size:14.5px; line-height:1.5; color:#fff; opacity:0.85; max-width:400px; margin:0 auto; }
+  .sowhat-list{ margin-top:16px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto; }
+  .sowhat-row{ display:flex; gap:9px; align-items:flex-start; font-size:13.5px; line-height:1.45; color:#fff; opacity:0.85; margin-bottom:8px; }
+  .sowhat-row .em{ flex-shrink:0; }
+  .radar-wrap{ display:none; }
+  .report-section{ margin-bottom:22px; }
+  .report-section h3{ font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--acid); margin:0 0 10px; text-transform:uppercase; letter-spacing:1.2px; }
+  .breadth-row{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.15); font-size:14px; }
+  .card-grid{ display:flex; flex-direction:column; gap:10px; }
+  .theme-card{ border:2px solid #fff; border-radius:0; padding:17px 18px; display:flex; align-items:flex-start; gap:12px; color:#fff; }
+  .theme-card .emoji{ font-size:27px; }
+  .theme-card .theme-label{ font-family:var(--font-display); font-size:19px; font-weight:700; letter-spacing:-0.3px; margin-bottom:4px; line-height:1.15; color:var(--acid); }
+  .theme-card .theme-text{ color:#fff; font-size:13px; font-weight:500; line-height:1.42; opacity:0.82; }
+  .notable-card{ background:var(--acid); color:var(--ink); border-radius:0; padding:16px; display:flex; gap:10px; align-items:flex-start; }
+  .notable-card .theme-text{ color:var(--ink); font-size:14.5px; font-weight:700; line-height:1.4; }
+  .footer-note{ font-size:12px; color:var(--gray); text-align:center; margin-top:20px; line-height:1.5; }
+  .report-btn{ font-family:var(--font-display); width:100%; padding:17px; border-radius:0; border:2px solid #fff; background:transparent; color:#fff; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.4px; margin-top:10px; }
+  .track-row{ border:2px solid var(--acid); border-radius:0; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .track-row .n{ font-family:var(--font-display); font-weight:700; font-size:15px; color:var(--acid); }
+  .reveal-in{ opacity:0; animation:revealUp 0.5s cubic-bezier(.22,1.1,.36,1) forwards; }
+  @keyframes revealUp{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:translateY(0); } }
+
+  @media print{
+    body{ overflow:visible; }
+    #screen-report{ position:static; display:flex !important; }
+    .no-print{ display:none !important; }
+    .screen:not(#screen-report){ display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+  <!-- WELCOME -->
+  <div class="screen active" id="screen-welcome">
+    <div class="stage-content full-center">
+      <div class="brand-lead">What do YOU think?</div>
+      <div class="brand-title">WDYT<span class="q">?</span></div>
+      <div class="brand-rule"></div>
+      <div class="brand-sub">10 quick situations. Real choices. Get your Vibe.</div>
+      <div class="skill-preview">
+        <span>&#127919; Take a Stand</span><span>&#128269; Read the Nuance</span><span>&#128483;&#65039; Best Argument</span><span>&#128279; Connect the Dots</span><span>&#128302; See What's Coming</span>
+      </div>
+      <button class="cta-btn" onclick="ensureAudio(); startExperience();">Start &#9656; ~3 min</button>
+      <div class="micro-disclaimer">No grades. No judging. Nothing here is right or wrong &mdash; except a couple of surprises.</div>
+    </div>
+  </div>
+
+  <!-- STAGE -->
+  <div class="screen" id="screen-stage">
+    <div class="stage-bg" id="stageBg"></div>
+    <div class="stage-glow"></div>
+    <div class="stage-overlay"></div>
+    <div class="stage-content">
+      <div class="skill-chip" id="skillChip"></div>
+      <button class="mute-btn" id="muteBtn" onclick="toggleMute()">&#128266;</button>
+      <div class="segbar" id="segbar"></div>
+      <div class="back-hint" id="backHint"></div>
+      <div class="drag-zone" id="dragZone">
+        <div class="drag-layer" id="dragLayer">
+          <div id="stepInner"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHALLENGE SHEET (Take a Stand only) — restored, scoped to just 2 of 10 items now -->
+  <div class="sheet-backdrop" id="sheetBackdrop" style="display:none;">
+    <div class="sheet">
+      <div class="label">&#9889; Plot twist</div>
+      <div class="text" id="challengeText"></div>
+      <div class="sheet-btns">
+        <button class="sheet-btn hold" onclick="resolveChallenge(true)">I'll hold my answer</button>
+        <button class="sheet-btn switch" onclick="resolveChallenge(false)">Good point &mdash; switching</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- No mid-session pause: only 10 questions total now, per direct feedback
+       that a sneak peek isn't needed once the round is already short. -->
+
+  <!-- NAME SHEET -->
+  <div class="sheet-backdrop" id="nameBackdrop" style="display:none;">
+    <div class="sheet">
+      <div class="label">Almost there</div>
+      <div class="text">What's your name or nickname?</div>
+      <input type="text" class="name-input" id="nameInput" placeholder="So your card comes back to you" />
+      <button class="sheet-btn hold" style="width:100%;" onclick="submitNameAndFinish()">See my card &#9656;</button>
+    </div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="screen" id="screen-loading">
+    <div class="stage-content loading-wrap">
+      <div class="loading-flip">?</div>
+      <div id="loadingText">Putting together your card&hellip;</div>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div class="screen" id="screen-report">
+    <div class="report-inner">
+      <span class="badge" id="reportBadge">Your Point of View Card</span>
+      <h1 id="reportName"></h1>
+      <p class="muted" id="reportMeta"></p>
+      <p class="muted" id="reportSkillLine" style="margin-top:2px; margin-bottom:20px;"></p>
+
+      <div class="archetype-banner" id="archetypeBanner">
+        <div class="archetype-title" id="archetypeTitle"></div>
+        <div class="archetype-sub" id="archetypeSub"></div>
+        <div class="sowhat-list" id="sowhatList"></div>
+      </div>
+
+      <div class="report-section">
+        <h3>Breadth</h3>
+        <div id="reportBreadth"></div>
+      </div>
+
+      <div class="report-section" id="trackRecordSection" style="display:none;">
+        <h3>Simulation Track Record</h3>
+        <div id="reportTrackRecord"></div>
+      </div>
+
+      <div class="report-section">
+        <h3>Where I Stand</h3>
+        <div class="card-grid" id="reportWhereIStand"></div>
+      </div>
+      <div class="report-section" id="notableSection">
+        <h3>Notable Moment</h3>
+        <div id="reportNotable"></div>
+      </div>
+      <div class="report-section" id="nextStepsSection">
+        <h3>Growing Your Voice</h3>
+        <div class="card-grid" id="reportNextSteps"></div>
+      </div>
+      <p class="footer-note">This card is a signal from today's mix of situations &mdash; not a verdict, not a grade, and not a finished picture of who you are.</p>
+
+      <!-- No continue button needed — one round, always complete. -->
+      <button class="report-btn no-print" id="shareBtn" onclick="shareReport()" style="background:#20242E;">Share my card</button>
+      <button class="report-btn no-print" onclick="window.print()">Save / Print this card</button>
+    </div>
+  </div>
+
+<script>
+// ---------- CONTENT: 20 episodes, 4 per skill ----------
+const SKILL_META = {
+  stand:    { label:"Take a Stand",          icon:"\ud83c\udfaf" },
+  nuance:   { label:"Read the Nuance",       icon:"\ud83d\udd0d" },
+  argument: { label:"Spot the Best Argument",icon:"\ud83d\udde3\ufe0f" },
+  analogy:  { label:"Connect the Dots",      icon:"\ud83d\udd17" },
+  simulate: { label:"See What's Coming",     icon:"\ud83d\udd2e" }
+};
+
+const EPISODES = [
+{ id:"st1", skillType:"stand", cat:"World Stage",
+    hook:"In one town, it started raining money. Literally.",
+    story:"Some companies now \u201cseed\u201d clouds \u2014 flying planes into them to make it rain exactly where they want. But rain made here might mean less rain somewhere else. So who gets to decide who gets the rain?",
+    reflection:"If a company could make it rain over your neighborhood, but it meant less rain elsewhere \u2014 would that be fair?",
+    a:"It's fair \u2014 first come, first served", b:"It's not fair \u2014 the sky belongs to no one",
+    chA:"But what if the \u201cfirst\u201d company is just the richest one \u2014 does that make it any less fair?",
+    chB:"But if it belongs to no one, what happens to farmers who desperately need rain and nobody's allowed to help?",
+    revA:58, revB:42 },
+{ id:"st3", skillType:"stand", cat:"Music & Art",
+    hook:"The song's stuck in everyone's head. It was written by AI in eleven seconds.",
+    story:"AI can now write catchy, well-structured songs almost instantly. Some people say it's genuinely music; others say something's missing if no human struggled to make it.",
+    reflection:"Does a song written by AI count as \u201creal\u201d music?",
+    a:"Yes \u2014 if it makes you feel something, it's real", b:"No \u2014 real music needs a human behind it",
+    chA:"What if you later found out your favorite song ever was written entirely by AI \u2014 would that change how you feel about it?",
+    chB:"What if a human just types one sentence and AI does literally everything else \u2014 is that still \u201chuman enough\u201d?",
+    revA:47, revB:53 },
+{ id:"nu1", skillType:"nuance", cat:"World Stage",
+    hook:"A country is hit hard. A rival offers help. Nobody's sure whether to say yes.",
+    story:"Accepting outside help after a disaster can save lives fast \u2014 but it can also come with strings attached, or handed to a country you don't fully trust.",
+    baselineQ:"Should a country generally accept help after a disaster, even from a rival?",
+    baselineYesPct:64,
+    conditions:[
+      {text:"What if the offer clearly comes with political strings attached?", flipPct:44},
+      {text:"What if refusing means people go without food or shelter?", flipPct:71},
+      {text:"What if accepting means giving up some control over how rebuilding happens?", flipPct:18}
+    ] },
+{ id:"nu3", skillType:"nuance", cat:"Music & Art",
+    hook:"The band's still touring. Every founding member has quietly left.",
+    story:"Some bands keep performing under a beloved name for decades after every original member is gone \u2014 technically legal, but it raises a real question about what fans are actually paying for.",
+    baselineQ:"Should a band be allowed to keep performing under the same name once every original member has left?",
+    baselineYesPct:47,
+    conditions:[
+      {text:"What if the sound and style stayed exactly the same?", flipPct:19},
+      {text:"What if fans buying tickets don't realize no original members are left?", flipPct:74},
+      {text:"What if the original members gave their blessing before leaving?", flipPct:61}
+    ] },
+{ id:"ar1", skillType:"argument", cat:"World Stage",
+    hook:"The bell rings. Half the class is barely awake.",
+    story:"Sleep researchers and parents have argued for years about when the school day should actually start for teenagers.",
+    claim:"School should start later in the day for teenagers.",
+    callPrompt:"If you wanted to convince a skeptical principal, which would you lead with?",
+    options:[
+      {key:"A", text:"Teenagers biologically need more sleep than younger kids or adults.", pct:51},
+      {key:"B", text:"Grades and focus measurably improve with more rest.", pct:38},
+      {key:"C", text:"It would match how most adults' workdays actually start.", pct:11}
+    ] },
+{ id:"ar3", skillType:"argument", cat:"Music & Art",
+    hook:"You used to buy the song. Now you rent the whole library.",
+    story:"Streaming replaced buying individual songs almost entirely \u2014 but not everyone thinks that trade was a fair one.",
+    claim:"Streaming platforms should let you buy individual songs again, not just subscriptions.",
+    callPrompt:"Which would convince someone who loves their subscription?",
+    options:[
+      {key:"A", text:"Casual listeners who barely use the app would save real money.", pct:35},
+      {key:"B", text:"Artists could get paid more directly per song sold.", pct:44},
+      {key:"C", text:"It hands listeners more control over what they actually pay for.", pct:21}
+    ] },
+{ id:"an1", skillType:"analogy", cat:"World Stage",
+    hook:"One country blocks the app overnight. Millions of accounts, gone.",
+    story:"A country bans a popular foreign app over data-privacy concerns, cutting off millions of users with no warning.",
+    callPrompt:"This is most like:",
+    options:[
+      {key:"A", text:"A landlord rejecting a tenant over a background check", pct:34},
+      {key:"B", text:"A store refusing to stock a product it doesn't fully trust", pct:46},
+      {key:"C", text:"A school banning a book nobody on staff has actually read", pct:20}
+    ] },
+{ id:"an3", skillType:"analogy", cat:"Music & Art",
+    hook:"Millions of views. The artist got a few hundred dollars and a \u201cthank you.\u201d",
+    story:"A brand features a rising artist's song in a big ad campaign, paying very little but offering huge exposure.",
+    callPrompt:"This is most like:",
+    options:[
+      {key:"A", text:"An unpaid internship that \u201clooks great on a resume\u201d", pct:52},
+      {key:"B", text:"A street performer getting one lucky, life-changing break", pct:31},
+      {key:"C", text:"A restaurant trading free food for a good review", pct:17}
+    ] },
+{ id:"si1", skillType:"simulate", cat:"World Stage",
+    hook:"Monday, Tuesday, Wednesday, Thursday. Then nothing.",
+    story:"Several real schools cut down to a four-day week. Nobody was fully sure what it would do to how stressed students actually felt.",
+    predictQ:"What happens to student stress levels after a school moves to a 4-day week?",
+    options:[ {key:"A", text:"Drops significantly"}, {key:"B", text:"Barely changes \u2014 or gets mixed results"}, {key:"C", text:"Actually increases"} ],
+    correctKey:"B",
+    revealText:"Real trials have found mixed, often underwhelming results. The extra day off is frequently offset by longer, more packed days the rest of the week \u2014 overall stress often ends up close to where it started.",
+    reflection:"Systems don't always respond the way the headline change suggests." },
+{ id:"si4", skillType:"simulate", cat:"Music & Art",
+    hook:"You used to own the song. Now you just borrow all of them, forever, for one monthly fee.",
+    story:"The music industry worried unlimited-streaming subscriptions would crush how much money the industry actually made, compared to buying songs one at a time.",
+    predictQ:"What happened to total music industry revenue once streaming subscriptions took over from individual purchases?",
+    options:[ {key:"A", text:"It kept shrinking, same trend as before"}, {key:"B", text:"It stabilized and then grew again"}, {key:"C", text:"It collapsed completely"} ],
+    correctKey:"B",
+    revealText:"Revenue actually stabilized and then grew again. Subscriptions turned out to be more sustainable than one-time purchases had become, even as artists still argue over how that money gets split.",
+    reflection:"An industry in decline doesn't always keep declining \u2014 sometimes the model just needed to change, not the product." }
+];
+
+const GRADIENTS = [
+  "linear-gradient(160deg,#FF5A3C,#3A1210)", "linear-gradient(160deg,#2AC9A0,#123B33)",
+  "linear-gradient(160deg,#8B7CF6,#2E1F5E)", "linear-gradient(160deg,#FFC94A,#7A5A12)",
+  "linear-gradient(160deg,#D9432A,#3A1210)"
+];
+const BURST_EMOJI = ["\u2728","\ud83d\udd25","\ud83d\udc80","\ud83d\udcad","\u2b50"];
+const REVEAL_TITLES = ["Here\u2019s where you stand", "The verdict is in", "Let\u2019s see the split", "Where you land", "Squad check"];
+
+// ---------- STATE ----------
+let state = { testerName:"", testerId:"", queue:[], idx:0, currentChoice:null, currentBaseline:null,
+  simCorrect:0, simTotal:0, responses:[], lockedArchetype:null, lockedSoWhat:null,
+  lockedWhereIStand:[], lockedNotableMoment:null, lockedNextSteps:[] };
+let currentEp = null;
+let stepState = 'hook'; // hook -> story -> call[/callBaseline -> callConditions] -> reveal
+let isTransitioning = false;
+
+// ---------- SOUND ----------
+let audioCtx = null, audioMuted = false;
+function ensureAudio(){
+  if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
+  if(audioCtx && audioCtx.state === 'suspended'){ audioCtx.resume(); }
+}
+function toggleMute(){ audioMuted = !audioMuted; document.getElementById('muteBtn').innerHTML = audioMuted ? '&#128263;' : '&#128266;'; }
+function tone(freq, duration, type, gainAmt, delay){
+  if(audioMuted || !audioCtx) return;
+  const t0 = audioCtx.currentTime + (delay || 0);
+  const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+  osc.type = type || 'sine'; osc.frequency.setValueAtTime(freq, t0);
+  gain.gain.setValueAtTime(gainAmt || 0.08, t0); gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.connect(gain); gain.connect(audioCtx.destination); osc.start(t0); osc.stop(t0 + duration);
+}
+function playWhoosh(){
+  if(audioMuted || !audioCtx) return;
+  const t0 = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+  osc.type = 'sine'; osc.frequency.setValueAtTime(200, t0); osc.frequency.exponentialRampToValueAtTime(440, t0 + 0.16);
+  gain.gain.setValueAtTime(0.05, t0); gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.18);
+  osc.connect(gain); gain.connect(audioCtx.destination); osc.start(t0); osc.stop(t0 + 0.18);
+}
+function playChime(){ tone(659, 0.35, 'sine', 0.08); tone(880, 0.4, 'sine', 0.07, 0.09); }
+function playPop(){ tone(520, 0.1, 'triangle', 0.06); }
+function playMiss(){ tone(280, 0.3, 'sine', 0.06); tone(220, 0.35, 'sine', 0.05, 0.1); }
+
+// ---------- GESTURE ENGINE ----------
+function makeDragZone(el, layerEl, opts){
+  let startY=0, lastY=0, dragging=false, downTime=0, moved=false, pointerId=null;
+  const THRESHOLD = 58;
+  function reset(){ layerEl.style.transition='transform 0.32s cubic-bezier(.22,1.1,.36,1), opacity 0.32s ease'; layerEl.style.transform='translateY(0)'; layerEl.style.opacity='1'; }
+  el.addEventListener('pointerdown', e => {
+    if(isTransitioning) return;
+    // Note: previously excluded gestures starting on .opt-pill here to protect button taps —
+    // but canForward()/canBackward() already gate which directions can commit on each step,
+    // so that exclusion was unnecessary and was blocking backward swipes on option-heavy screens.
+    dragging = true; moved = false; startY = e.clientY; lastY = startY; downTime = Date.now(); pointerId = e.pointerId;
+    layerEl.style.transition = 'none';
+    try{ el.setPointerCapture(pointerId); }catch(err){}
+    e.preventDefault();
+  });
+  el.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    lastY = e.clientY; const delta = lastY - startY;
+    if(Math.abs(delta) > 6){ moved = true; e.preventDefault(); }
+    if(!moved) return;
+    const allowUp = opts.canForward(); const allowDown = opts.canBackward();
+    let resisted = delta;
+    if(delta < 0 && !allowUp) resisted = delta * 0.2;
+    if(delta > 0 && !allowDown) resisted = delta * 0.2;
+    resisted = resisted * 0.6;
+    layerEl.style.transform = 'translateY(' + resisted + 'px)';
+    layerEl.style.opacity = String(Math.max(1 - Math.abs(resisted) / 260, 0.45));
+  });
+  function onUp(e){
+    if(!dragging) return; dragging = false;
+    try{ if(pointerId !== null) el.releasePointerCapture(pointerId); }catch(err){}
+    const delta = lastY - startY; const duration = Date.now() - downTime; const isTap = !moved && duration < 400;
+    const allowUp = opts.canForward(); const allowDown = opts.canBackward();
+    if(isTap && allowUp){ commit('up'); }
+    else if(delta < -THRESHOLD && allowUp){ commit('up'); }
+    else if(delta > THRESHOLD && allowDown){ commit('down'); }
+    else{ reset(); }
+  }
+  function commit(direction){
+    layerEl.style.transition = 'transform 0.24s ease, opacity 0.24s ease';
+    layerEl.style.transform = 'translateY(' + (direction === 'up' ? '-100%' : '100%') + ')';
+    layerEl.style.opacity = '0'; isTransitioning = true;
+    setTimeout(() => {
+      if(direction === 'up' && opts.onForward) opts.onForward();
+      if(direction === 'down' && opts.onBackward) opts.onBackward();
+    }, 180);
+  }
+  el.addEventListener('pointerup', onUp);
+  el.addEventListener('pointercancel', () => { dragging = false; reset(); });
+}
+function playIn(layerEl, fromDirection){
+  playWhoosh();
+  layerEl.style.transition = 'none';
+  layerEl.style.transform = 'translateY(' + (fromDirection === 'up' ? '32px' : '-32px') + ')';
+  layerEl.style.opacity = '0';
+  void layerEl.offsetWidth;
+  layerEl.style.transition = 'transform 0.3s cubic-bezier(.22,1.15,.36,1), opacity 0.3s ease';
+  layerEl.style.transform = 'translateY(0)'; layerEl.style.opacity = '1';
+  setTimeout(() => { isTransitioning = false; }, 300);
+}
+
+function goTo(id){ document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function currentEpisode(){ return state.queue[state.idx]; }
+function setBg(){ /* intentionally no-op — true black stays constant across every episode in this direction, not cycled per-episode gradients */ }
+
+function buildSegbar(){
+  // Flat 10-step bar — no leg grouping, since the whole round is short enough
+  // now to just show as one continuous strip of progress.
+  const bar = document.getElementById('segbar'); bar.innerHTML = "";
+  state.queue.forEach(() => {
+    const seg = document.createElement('div'); seg.className='seg'; seg.innerHTML='<div class="seg-fill"></div>';
+    bar.appendChild(seg);
+  });
+  updateSegProgress(0);
+}
+function updateSegProgress(frac){
+  const segs = document.querySelectorAll('#segbar .seg-fill');
+  segs.forEach((s,i) => { if(i < state.idx) s.style.width='100%'; else if(i === state.idx) s.style.width=(frac*100)+'%'; else s.style.width='0%'; });
+}
+function updateBackHint(){
+  const hint = document.getElementById('backHint');
+  if(stepState === 'call' || stepState === 'callBaseline' || stepState === 'callConditions'){
+    hint.style.display='block'; hint.textContent = '\u2304 swipe down to go back';
+  } else if((stepState === 'hook' || stepState === 'reveal') && state.idx > 0){
+    hint.style.display='block'; hint.textContent = '\u2304 swipe down for previous';
+  } else { hint.style.display='none'; }
+}
+function updateSkillChip(){
+  const meta = SKILL_META[currentEp.skillType];
+  document.getElementById('skillChip').textContent = meta.icon + ' ' + meta.label;
+}
+
+const dragZone = document.getElementById('dragZone');
+const dragLayer = document.getElementById('dragLayer');
+const stepInner = document.getElementById('stepInner');
+
+// ---------- HOOK / STORY (shared across all skill types) ----------
+function renderIntro(){
+  // Hook + story combined into one screen — one swipe instead of two, per the
+  // "trim per-item weight" fix: every episode now costs one fewer full step.
+  stepState = 'hook'; setBg(); updateSegProgress(0.2); updateSkillChip();
+  stepInner.innerHTML =
+    '<div class="stage-tap-inner"><div><div class="icon-badge">' + SKILL_META[currentEp.skillType].icon +
+    '</div><div class="hook">' + currentEp.hook + '</div>' +
+    '<div class="story" style="margin-top:16px; font-size:16px; opacity:0.92;">' + currentEp.story + '</div></div>' +
+    '<div class="swipe-cue"><span class="chev">\u2303</span> swipe up</div></div>';
+  updateBackHint();
+}
+
+// ---------- CALL (dispatches per skillType) ----------
+function renderCall(){
+  if(currentEp.skillType === 'nuance'){ renderCallBaseline(); return; }
+  stepState = 'call'; updateSegProgress(0.6);
+  if(currentEp.skillType === 'stand'){
+    stepInner.innerHTML =
+      '<div style="flex:1; display:flex; flex-direction:column;">' +
+      '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + SKILL_META.stand.icon + '</div>' +
+      '<div class="call-q">' + currentEp.reflection + '</div></div>' +
+      '<div class="options">' +
+      '<div class="opt-pill" id="pillA" onclick="pickChoice(\'A\')"><span class="letter">A</span><span>' + currentEp.a + '</span></div>' +
+      '<div class="opt-pill" id="pillB" onclick="pickChoice(\'B\')"><span class="letter">B</span><span>' + currentEp.b + '</span></div>' +
+      '</div></div>';
+  } else {
+    // argument / analogy / simulate share a 3-option layout
+    const prompt = currentEp.skillType === 'simulate' ? currentEp.predictQ : currentEp.callPrompt;
+    const claimLine = currentEp.claim ? '<div class="call-sub">' + currentEp.claim + '</div>' : '';
+    let optsHtml = '';
+    currentEp.options.forEach((o, i) => {
+      const letter = o.key;
+      optsHtml += '<div class="opt-pill" id="pill' + letter + '" onclick="' +
+        (currentEp.skillType === 'simulate' ? 'pickPrediction' : 'pickOption3') + '(\'' + letter + '\')">' +
+        '<span class="letter">' + letter + '</span><span>' + o.text + '</span></div>';
+    });
+    stepInner.innerHTML =
+      '<div style="flex:1; display:flex; flex-direction:column;">' +
+      '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + SKILL_META[currentEp.skillType].icon + '</div>' +
+      claimLine + '<div class="call-q">' + prompt + '</div></div>' +
+      '<div class="options">' + optsHtml + '</div></div>';
+  }
+  updateBackHint();
+}
+
+function renderCallBaseline(){
+  stepState = 'callBaseline'; updateSegProgress(0.55);
+  stepInner.innerHTML =
+    '<div style="flex:1; display:flex; flex-direction:column;">' +
+    '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + SKILL_META.nuance.icon + '</div>' +
+    '<div class="call-q">' + currentEp.baselineQ + '</div></div>' +
+    '<div class="options">' +
+    '<div class="opt-pill" onclick="pickBaseline(true)"><span class="letter">Y</span><span>Generally, yes</span></div>' +
+    '<div class="opt-pill" onclick="pickBaseline(false)"><span class="letter">N</span><span>Generally, no</span></div>' +
+    '</div></div>';
+  updateBackHint();
+}
+function renderCallConditions(){
+  stepState = 'callConditions'; updateSegProgress(0.75);
+  let optsHtml = '';
+  currentEp.conditions.forEach((c, i) => {
+    optsHtml += '<div class="opt-pill" onclick="pickCondition(' + i + ')"><span class="letter">' + (i+1) + '</span><span>' + c.text + '</span></div>';
+  });
+  stepInner.innerHTML =
+    '<div style="flex:1; display:flex; flex-direction:column;">' +
+    '<div class="call-wrap"><div class="call-sub">Which of these would most likely flip your answer?</div>' +
+    '<div class="call-q" style="font-size:19px;">Pick the strongest one</div></div>' +
+    '<div class="options">' + optsHtml + '</div></div>';
+  updateBackHint();
+}
+
+// ---------- PICK HANDLERS ----------
+function pickChoice(letter){
+  // Restored: the counter-argument moment is genuinely central to what "Take a
+  // Stand" tests (does a position hold up under pushback), and now only affects
+  // 2 of 10 total items instead of every episode — a much smaller total cost
+  // than when this was cut earlier in the build.
+  playPop(); state.currentChoice = letter;
+  document.getElementById('pillA').classList.toggle('selected', letter==='A');
+  document.getElementById('pillB').classList.toggle('selected', letter==='B');
+  document.getElementById('challengeText').textContent = letter === 'A' ? currentEp.chA : currentEp.chB;
+  setTimeout(() => { document.getElementById('sheetBackdrop').style.display = 'flex'; }, 140);
+}
+function resolveChallenge(held){
+  document.getElementById('sheetBackdrop').style.display = 'none';
+  const finalChoice = held ? state.currentChoice : (state.currentChoice === 'A' ? 'B' : 'A');
+  state.responses = state.responses.filter(r => r.episodeId !== currentEp.id);
+  state.responses.push({ episodeId:currentEp.id, skillType:'stand', category:currentEp.cat, prompt:currentEp.reflection,
+    optionA:currentEp.a, optionB:currentEp.b, originalChoice:state.currentChoice, held:held, finalChoice:finalChoice, timestamp:new Date().toISOString() });
+  stepState = 'reveal'; updateSegProgress(0.9);
+  renderRevealStand(finalChoice);
+  playIn(dragLayer, 'up');
+}
+
+function pickBaseline(yesBool){
+  playPop(); state.currentBaseline = yesBool;
+  renderCallConditions();
+  playIn(dragLayer, 'up');
+}
+function pickCondition(idx){
+  playPop();
+  const cond = currentEp.conditions[idx];
+  state.responses = state.responses.filter(r => r.episodeId !== currentEp.id);
+  state.responses.push({ episodeId:currentEp.id, skillType:'nuance', category:currentEp.cat, prompt:currentEp.baselineQ,
+    baseline:state.currentBaseline, pickedCondition:cond.text, flipPct:cond.flipPct, timestamp:new Date().toISOString() });
+  stepState = 'reveal'; updateSegProgress(0.9);
+  renderRevealNuance(idx);
+  playIn(dragLayer, 'up');
+}
+
+function pickOption3(key){
+  playPop();
+  const opt = currentEp.options.find(o => o.key === key);
+  state.responses = state.responses.filter(r => r.episodeId !== currentEp.id);
+  state.responses.push({ episodeId:currentEp.id, skillType:currentEp.skillType, category:currentEp.cat,
+    prompt: currentEp.claim || currentEp.callPrompt, pickedKey:key, pickedText:opt.text, timestamp:new Date().toISOString() });
+  stepState = 'reveal'; updateSegProgress(0.9);
+  renderRevealSplit3(key);
+  playIn(dragLayer, 'up');
+}
+
+function pickPrediction(key){
+  playPop();
+  const correct = key === currentEp.correctKey;
+  state.simTotal += 1; if(correct) state.simCorrect += 1;
+  state.responses = state.responses.filter(r => r.episodeId !== currentEp.id);
+  state.responses.push({ episodeId:currentEp.id, skillType:'simulate', category:currentEp.cat, prompt:currentEp.predictQ,
+    pickedKey:key, correctKey:currentEp.correctKey, correct:correct, revealText:currentEp.revealText, timestamp:new Date().toISOString() });
+  stepState = 'reveal'; updateSegProgress(0.9);
+  renderRevealSimulate(key, correct);
+  playIn(dragLayer, 'up');
+}
+
+// ---------- REVEAL RENDERERS ----------
+function flashPulse(color){
+  const glow = document.querySelector('.stage-glow'); if(!glow) return;
+  glow.style.transition = 'none'; glow.style.background = 'radial-gradient(circle at 50% 40%, ' + color + '99, transparent 60%)'; glow.style.opacity = '1';
+  requestAnimationFrame(() => { glow.style.transition = 'opacity 0.6s ease, background 0.6s ease'; glow.style.opacity = '0.5'; setTimeout(() => { glow.style.background = ''; }, 600); });
+}
+function spawnBurst(){
+  const wrap = document.getElementById('revealWrap'); if(!wrap) return;
+  for(let i=0;i<9;i++){
+    const b = document.createElement('div'); b.className='burst'; b.textContent = BURST_EMOJI[Math.floor(Math.random()*BURST_EMOJI.length)];
+    b.style.left = (18 + Math.random()*64) + '%'; b.style.top = (26 + Math.random()*12) + '%';
+    b.style.fontSize = (18 + Math.random()*14) + 'px'; b.style.animationDelay = (i*55) + 'ms';
+    wrap.appendChild(b); setTimeout(() => b.remove(), 1300 + i*55);
+  }
+}
+
+function renderRevealStand(finalChoice){
+  const data = [ {letter:'A', label:currentEp.a, pct:currentEp.revA}, {letter:'B', label:currentEp.b, pct:currentEp.revB} ];
+  const yourPct = finalChoice === 'A' ? currentEp.revA : currentEp.revB;
+  const isMajority = yourPct >= 50;
+  const title = REVEAL_TITLES[state.idx % REVEAL_TITLES.length];
+  let rowsHtml = '';
+  data.forEach(d => {
+    rowsHtml += '<div class="rbar-row"><div class="rbar-label"><span>' + d.letter + '. ' + d.label + '</span>' +
+      (d.letter===finalChoice ? '<span class="you-badge">YOU</span>' : '') + '</div>' +
+      '<div class="rbar-track"><div class="rbar-fill" id="fillR-' + d.letter + '" style="background:' + (d.letter===finalChoice ? 'var(--acid)' : 'rgba(255,255,255,0.35)') + ';"></div></div></div>';
+  });
+  stepInner.innerHTML =
+    '<div class="reveal-wrap" id="revealWrap"><div class="reveal-title">' + title + '</div>' +
+    '<div class="reveal-sub">This is how everyone who\u2019s answered this one landed \u2014 no right side, just yours.</div>' +
+    rowsHtml + '<div class="verdict-chip" id="verdictChip"></div>' +
+    '<div class="swipe-cue" style="position:static; margin-top:14px;"><span class="chev">\u2303</span> swipe up</div></div>';
+  updateBackHint();
+  setTimeout(() => {
+    data.forEach(d => { const el = document.getElementById('fillR-'+d.letter); if(el){ el.style.width=d.pct+'%'; el.textContent=d.pct+'%'; } });
+    const chip = document.getElementById('verdictChip');
+    if(chip){ chip.textContent = isMajority ? "\ud83d\udfe2 You're with the " + yourPct + "% majority" : "\ud83d\udd25 Bold pick \u2014 only " + yourPct + "% agree"; chip.classList.add('show'); }
+    flashPulse('#DFFF3C'); spawnBurst(); playChime();
+  }, 90);
+}
+
+function renderRevealSplit3(pickedKey){
+  const title = REVEAL_TITLES[state.idx % REVEAL_TITLES.length];
+  const subtitle = currentEp.skillType === 'argument' ? "Here's what everyone else would lead with too." : "Here's the pattern everyone else saw too.";
+  let rowsHtml = '';
+  currentEp.options.forEach((o) => {
+    rowsHtml += '<div class="rbar-row"><div class="rbar-label"><span>' + o.key + '. ' + o.text + '</span>' +
+      (o.key===pickedKey ? '<span class="you-badge">YOU</span>' : '') + '</div>' +
+      '<div class="rbar-track"><div class="rbar-fill" id="fillR-' + o.key + '" style="background:' + (o.key===pickedKey ? 'var(--acid)' : 'rgba(255,255,255,0.35)') + ';"></div></div></div>';
+  });
+  stepInner.innerHTML =
+    '<div class="reveal-wrap" id="revealWrap"><div class="reveal-title">' + title + '</div>' +
+    '<div class="reveal-sub">' + subtitle + '</div>' + rowsHtml +
+    '<div class="swipe-cue" style="position:static; margin-top:14px;"><span class="chev">\u2303</span> swipe up</div></div>';
+  updateBackHint();
+  setTimeout(() => {
+    currentEp.options.forEach(o => { const el = document.getElementById('fillR-'+o.key); if(el){ el.style.width=o.pct+'%'; el.textContent=o.pct+'%'; } });
+    flashPulse('#DFFF3C'); spawnBurst(); playChime();
+  }, 90);
+}
+
+function renderRevealNuance(pickedIdx){
+  const b = currentEp.baselineYesPct;
+  const baselineLabel = state.currentBaseline ? "You said: generally yes" : "You said: generally no";
+  let condsHtml = '';
+  currentEp.conditions.forEach((c, i) => {
+    condsHtml += '<div class="rbar-row"><div class="rbar-label"><span>' + (i+1) + '. ' + c.text + '</span>' +
+      (i===pickedIdx ? '<span class="you-badge">YOU</span>' : '') + '</div>' +
+      '<div class="rbar-track"><div class="rbar-fill" id="fillC-' + i + '" style="background:' + (i===pickedIdx ? 'var(--acid)' : 'rgba(255,255,255,0.35)') + ';"></div></div></div>';
+  });
+  stepInner.innerHTML =
+    '<div class="reveal-wrap" id="revealWrap"><div class="reveal-title">Here\u2019s how conditions shift things</div>' +
+    '<div class="reveal-sub">' + baselineLabel + ' \u2014 ' + b + '% of people generally agreed with that starting point.</div>' +
+    condsHtml +
+    '<div class="reveal-sub" style="margin-top:6px;">The bars show how many people said each condition would flip their answer.</div>' +
+    '<div class="swipe-cue" style="position:static; margin-top:10px;"><span class="chev">\u2303</span> swipe up</div></div>';
+  updateBackHint();
+  setTimeout(() => {
+    currentEp.conditions.forEach((c, i) => { const el = document.getElementById('fillC-'+i); if(el){ el.style.width=c.flipPct+'%'; el.textContent=c.flipPct+'%'; } });
+    flashPulse('#DFFF3C'); spawnBurst(); playChime();
+  }, 90);
+}
+
+function renderRevealSimulate(pickedKey, correct){
+  stepInner.innerHTML =
+    '<div class="reveal-wrap" id="revealWrap">' +
+    '<div class="result-badge">' + (correct ? "\u2705" : "\u274c") + '</div>' +
+    '<div class="reveal-title">' + (correct ? "Nailed it" : "Not quite") + '</div>' +
+    '<div class="result-text">' + currentEp.revealText + '</div>' +
+    '<div class="options" id="simOptions" style="padding:6px 0 0;"></div>' +
+    '<div class="track-record" id="trackLine"></div>' +
+    '<div class="swipe-cue" style="position:static; margin-top:14px;"><span class="chev">\u2303</span> swipe up</div></div>';
+  const optsWrap = document.getElementById('simOptions');
+  currentEp.options.forEach(o => {
+    const cls = o.key === currentEp.correctKey ? 'correct' : (o.key === pickedKey ? 'incorrect' : '');
+    const div = document.createElement('div');
+    div.className = 'opt-pill ' + cls;
+    div.style.cursor = 'default';
+    div.innerHTML = '<span class="letter">' + o.key + '</span><span>' + o.text + '</span>';
+    optsWrap.appendChild(div);
+  });
+  document.getElementById('trackLine').textContent = "Your simulation calls: " + state.simCorrect + "/" + state.simTotal + " correct";
+  updateBackHint();
+  setTimeout(() => { flashPulse(correct ? '#DFFF3C' : '#666666'); if(correct){ spawnBurst(); playChime(); } else { playMiss(); } }, 90);
+}
+
+// ---------- GESTURE WIRING ----------
+makeDragZone(dragZone, dragLayer, {
+  canForward: () => stepState === 'hook' || stepState === 'reveal',
+  canBackward: () => {
+    if(stepState === 'call' || stepState === 'callBaseline') return true;
+    if(stepState === 'callConditions') return true;
+    if(stepState === 'hook' || stepState === 'reveal') return state.idx > 0;
+    return false;
+  },
+  onForward: () => {
+    if(stepState === 'hook'){ renderCall(); playIn(dragLayer, 'up'); }
+    else if(stepState === 'reveal'){ advanceEpisode(); }
+    else { isTransitioning = false; playIn(dragLayer, 'up'); }
+  },
+  onBackward: () => {
+    if(stepState === 'call' || stepState === 'callBaseline'){ renderIntro(); playIn(dragLayer, 'down'); }
+    else if(stepState === 'callConditions'){ renderCallBaseline(); playIn(dragLayer, 'down'); }
+    else if(stepState === 'hook'){ goToPreviousEpisode(); }
+    else if(stepState === 'reveal'){ goToPreviousEpisode(); }
+    else { isTransitioning = false; playIn(dragLayer, 'down'); }
+  }
+});
+
+// ---------- FLOW ----------
+function buildQueue(){
+  // 2 rounds of all 5 skills = 10 total, one continuous round — no legs, no
+  // mid-session pause. Order shuffled fresh each round so it never feels mechanical.
+  const skillKeys = Object.keys(SKILL_META);
+  const bySkill = {};
+  skillKeys.forEach(k => { bySkill[k] = shuffle(EPISODES.filter(e => e.skillType === k)); });
+  const queue = [];
+  for(let round = 0; round < 2; round++){
+    shuffle(skillKeys).forEach(k => { queue.push(bySkill[k][round]); });
+  }
+  return queue;
+}
+
+function startExperience(){
+  state.queue = buildQueue();
+  state.idx = 0; state.responses = []; state.simCorrect = 0; state.simTotal = 0;
+  buildSegbar();
+  goTo('screen-stage');
+  currentEp = currentEpisode();
+  renderIntro();
+  dragLayer.style.transition = 'none'; dragLayer.style.transform = 'translateY(0)'; dragLayer.style.opacity = '1';
+}
+
+function advanceEpisode(){
+  state.idx++;
+  if(state.idx >= state.queue.length){ isTransitioning = false; viewCard(); return; }
+  currentEp = currentEpisode(); renderIntro(); playIn(dragLayer, 'up');
+}
+// Single entry point for the end-of-round card. Name is captured once.
+function viewCard(){
+  if(!state.testerName){ document.getElementById('nameBackdrop').style.display = 'flex'; }
+  else { generateAndShowCard(); }
+}
+function goToPreviousEpisode(){
+  if(state.idx <= 0){ isTransitioning = false; playIn(dragLayer, 'down'); return; }
+  state.idx--; currentEp = currentEpisode(); renderIntro(); playIn(dragLayer, 'down');
+}
+function submitNameAndFinish(){
+  const val = document.getElementById('nameInput').value.trim();
+  state.testerName = val || "You";
+  state.testerId = (val || "guest").toLowerCase().replace(/[^a-z0-9]+/g,'-') + '-' + Date.now().toString(36);
+  document.getElementById('nameBackdrop').style.display = 'none';
+  generateAndShowCard();
+}
+
+// ---------- STORAGE ----------
+async function saveResponses(){
+  if(!window.storage || typeof window.storage.set !== 'function'){ return; }
+  const payload = { testerName:state.testerName, testerId:state.testerId, completedAt:new Date().toISOString(),
+    simCorrect:state.simCorrect, simTotal:state.simTotal, responses:state.responses };
+  try{ await window.storage.set('responses:' + state.testerId, JSON.stringify(payload), true); }catch(e){}
+  try{
+    let indexList = [];
+    try{ const existing = await window.storage.get('tester_index', true); if(existing && existing.value){ indexList = JSON.parse(existing.value); } }catch(e){ indexList = []; }
+    indexList.push({ testerId:state.testerId, testerName:state.testerName, completedAt:payload.completedAt });
+    await window.storage.set('tester_index', JSON.stringify(indexList), true);
+  }catch(e){}
+}
+
+// ---------- REPORT ----------
+function summarizeResponse(r){
+  if(r.skillType==='stand'){ return "[Take a Stand] " + r.prompt + " | Chose: " + (r.finalChoice==='A'?r.optionA:r.optionB) + " | " + (r.held?"Held firm after pushback":"Changed their mind after pushback"); }
+  if(r.skillType==='nuance'){ return "[Read the Nuance] " + r.prompt + " | Baseline: " + (r.baseline?"yes":"no") + " | Said this would flip them: \"" + r.pickedCondition + "\""; }
+  if(r.skillType==='argument'){ return "[Spot the Best Argument] Claim: " + r.prompt + " | Picked as most persuasive: \"" + r.pickedText + "\""; }
+  if(r.skillType==='analogy'){ return "[Connect the Dots] Situation: " + r.prompt + " | Picked pattern: \"" + r.pickedText + "\""; }
+  if(r.skillType==='simulate'){ return "[See What's Coming] " + r.prompt + " | Predicted \"" + r.pickedKey + "\" \u2014 " + (r.correct?"correct":"incorrect") + ". " + r.revealText; }
+  return "";
+}
+
+const LOADING_LINES = ["Looking at your answers\u2026", "Finding your pattern\u2026", "Writing your Vibe\u2026", "Almost there\u2026"];
+let loadingInterval = null;
+function startLoadingCycle(){
+  const el = document.getElementById('loadingText');
+  let i = 0;
+  el.textContent = LOADING_LINES[0];
+  el.style.opacity = '1';
+  loadingInterval = setInterval(() => {
+    i = (i + 1) % LOADING_LINES.length;
+    el.style.opacity = '0';
+    setTimeout(() => { el.textContent = LOADING_LINES[i]; el.style.opacity = '1'; }, 250);
+  }, 1500);
+}
+function stopLoadingCycle(){
+  if(loadingInterval){ clearInterval(loadingInterval); loadingInterval = null; }
+}
+
+async function generateAndShowCard(){
+  // No leg/progressive logic anymore — one round, one complete report,
+  // generated once at the end. Everything below is requested in a single call.
+  goTo('screen-loading');
+  startLoadingCycle();
+  await saveResponses();
+
+  const breadth = {}; const skillCounts = {};
+  state.responses.forEach(r => {
+    breadth[r.category] = (breadth[r.category]||0) + 1;
+    skillCounts[r.skillType] = (skillCounts[r.skillType]||0) + 1;
+  });
+
+  const THEME_COUNT = 3, NEXT_COUNT = 3;
+  let apiResult = null;
+  try{
+    const summaryForPrompt = state.responses.map(summarizeResponse).join('\n');
+    const themeTemplate = '{"theme": "2-3 word theme", "emoji": "single emoji", "text": "TWO first-person sentences, max 40 words total, textured and specific to them"}';
+    const nextStepAll = [
+      '{"emoji": "single emoji", "text": "A thinking habit to practice going forward, based on your pattern. Max 16 words, an exciting challenge, not an assignment."}',
+      '{"emoji": "single emoji", "text": "A real, age-appropriate place to use this voice \u2014 never phrased as homework. Max 16 words."}',
+      '{"emoji": "single emoji", "text": "An invitation to keep exploring \u2014 a specific skill or category you haven\'t tried yet, framed as curiosity. Max 16 words."}'
+    ];
+
+    const schema = '{\n  ' + [
+      '"archetype": {"title": "A punchy 2-4 word VIBE name \u2014 like how a gamer describes their playstyle, not a fixed personality label. Describes an approach or way of engaging (e.g. \'The Bold Contrarian\', \'The Careful Bridge-Builder\', \'The Pattern Spotter\') \u2014 genuinely earned from their pattern across all 10 situations, not generic", "subtitle": "ONE sentence, max 22 words, SECOND PERSON, speaking directly to the reader as \'you\' \u2014 describing HOW you tend to play/engage with these situations, not a claim about who you permanently are"}',
+      '"soWhat": [\n    {"emoji": "single emoji", "text": "ONE confident, SECOND PERSON, present-tense sentence speaking directly to the reader as \'you\', describing a REAL, NEAR-TERM situation where this specific pattern already shows up as a strength for you. Max 20 words. NEVER a career or job prediction."},\n    {"emoji": "single emoji", "text": "ONE more, SECOND PERSON, a different real-life situation than the first. Max 20 words. Never a career or job prediction."}\n  ]',
+      '"whereIStand": [\n    ' + Array(THEME_COUNT).fill(themeTemplate).join(',\n    ') + '\n  ]',
+      '"notableMoment": {"emoji": "single emoji", "text": "ONE short first-person sentence about a standout moment \u2014 a firm stance, a surprising prediction result, or a genuinely tough call. Max 18 words."}',
+      '"nextSteps": [\n    ' + nextStepAll.slice(0, NEXT_COUNT).join(',\n    ') + '\n  ]'
+    ].join(',\n  ') + '\n}';
+
+    const prompt = "You are writing a \"Point of View Portfolio\" DIRECTLY FOR a young person named " + state.testerName + " to read about THEMSELVES right now \u2014 there is no separate adult-facing version, so every line must speak to them, never describe them from the outside. It's based on the pattern in their answers below across FIVE different kinds of thinking exercises (taking a stand, reading nuance, evaluating arguments, spotting patterns, and predicting outcomes). This is NOT a grade, evaluation, or psychological assessment \u2014 it's active coaching toward becoming a thought leader. Where I Stand and notableMoment are written AS them, in first person (\"I...\"), reflecting their own recorded choices. Archetype, soWhat, and nextSteps are written TO them, in second person (\"you/your\") \u2014 like a coach or friend speaking directly to the reader, NEVER in third person (\"they/their/them\").\n\nTheir answers (" + state.responses.length + " total):\n" + summaryForPrompt +
+      "\n\nRespond with ONLY valid JSON, no markdown fences, no preamble, in this exact shape:\n" + schema +
+      "\nWarm, specific, energizing, age-appropriate for 10-15. Never imply a right or wrong answer (except for the See What's Coming predictions, which do have a correct outcome). Never use words like \"assignment\", \"homework\", \"exercise\", or \"task\". The vibe title must feel earned, specific, and describe an approach \u2014 avoid generic titles like 'The Thinker', and avoid anything that sounds like a fixed personality diagnosis rather than a current way of engaging. The soWhat lines should read confidently \u2014 no hedging language like 'might' or 'could' \u2014 since a disclaimer elsewhere already frames this as a signal, not a verdict. Return EXACTLY " + THEME_COUNT + " items in whereIStand and EXACTLY " + NEXT_COUNT + " items in nextSteps \u2014 not more, not fewer.";
+
+    // One retry before accepting the fallback — most failures here are transient.
+    async function callClaude(){
+      // Calls our own backend instead of Anthropic directly -- the backend
+      // holds the real API key safely and this app never sees it.
+      const response = await fetch("/api/generate-card", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+      });
+      if(!response.ok){
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error("Backend request failed: " + (errBody.error || response.status));
+      }
+      const data = await response.json();
+      const textBlock = (data.content || []).find(b => b.type === "text");
+      if(!textBlock) throw new Error("No text block in response");
+      return JSON.parse(textBlock.text.replace(/```json|```/g, "").trim());
+    }
+    try{ apiResult = await callClaude(); }
+    catch(firstErr){ apiResult = await callClaude(); }
+  }catch(e){ apiResult = null; }
+
+  if(apiResult && apiResult.archetype){ state.lockedArchetype = apiResult.archetype; state.lockedSoWhat = apiResult.soWhat || fallbackSoWhat(); }
+  else { state.lockedArchetype = fallbackArchetype(); state.lockedSoWhat = fallbackSoWhat(); }
+
+  if(apiResult && apiResult.whereIStand && apiResult.whereIStand.length){
+    state.lockedWhereIStand = apiResult.whereIStand.slice(0, THEME_COUNT);
+  } else {
+    state.lockedWhereIStand = state.responses.slice(0, THEME_COUNT).map((r,i) => fallbackThemeCard(i));
+  }
+  while(state.lockedWhereIStand.length < THEME_COUNT){ state.lockedWhereIStand.push(fallbackThemeCard(state.lockedWhereIStand.length)); }
+
+  state.lockedNotableMoment = (apiResult && apiResult.notableMoment) ? apiResult.notableMoment : fallbackNotableMoment();
+
+  if(apiResult && apiResult.nextSteps && apiResult.nextSteps.length){
+    state.lockedNextSteps = apiResult.nextSteps.slice(0, NEXT_COUNT);
+  } else {
+    state.lockedNextSteps = [];
+  }
+  while(state.lockedNextSteps.length < NEXT_COUNT){ state.lockedNextSteps.push(fallbackNextStepItem(state.lockedNextSteps.length)); }
+
+  stopLoadingCycle();
+  renderReport(breadth, skillCounts);
+}
+
+// Fallbacks are written to sit convincingly alongside AI-generated cards: a real
+// theme name (never the raw category), first person, two sentences, same voice.
+// They're also flagged isFallback so a later successful call can upgrade them
+// rather than leaving a visibly plainer card locked in for the whole session.
+function fallbackThemeCard(indexSoFar){
+  const r = state.responses[Math.min(indexSoFar, state.responses.length - 1)];
+  let theme = "", line = "";
+  if(r.skillType==='stand'){
+    const chosenText = (r.finalChoice==='A'?r.optionA:r.optionB);
+    theme = r.held ? "Holding My Line" : "Open To Being Moved";
+    line = "I landed on this: \u201c" + chosenText + "\u201d " + (r.held
+      ? "A good counter-argument didn't shake me \u2014 I'd already thought it through."
+      : "A good counter-argument actually moved me, and I'd rather update than dig in.");
+  } else if(r.skillType==='nuance'){
+    theme = "Context Changes It";
+    line = "My starting answer here was " + (r.baseline?"yes":"no") + ", but it isn't fixed. What would genuinely flip me: \u201c" + r.pickedCondition + "\u201d \u2014 the details matter more to me than the rule.";
+  } else if(r.skillType==='argument'){
+    theme = "What Actually Persuades";
+    line = "If I had to convince someone here, I'd lead with: \u201c" + r.pickedText + "\u201d I care about what changes a mind, not just what sounds right.";
+  } else if(r.skillType==='analogy'){
+    theme = "Patterns I Notice";
+    line = "This one struck me as \u201c" + r.pickedText + "\u201d I tend to understand new situations by finding what they rhyme with.";
+  } else if(r.skillType==='simulate'){
+    theme = r.correct ? "Reading The System" : "Surprised By Reality";
+    line = r.correct
+      ? "I called this outcome correctly. I try to think about how things actually play out, not just how they sound."
+      : "I got this one wrong, and that's useful \u2014 the obvious answer isn't always what really happens.";
+  }
+  return { theme: theme, emoji: SKILL_META[r.skillType].icon, text: line, isFallback: true };
+}
+function fallbackNextStepItem(indexSoFar){
+  const arr = [
+    { emoji: "\ud83e\udde0", text: "Next time you're sure about something, try arguing the other side for fun." },
+    { emoji: "\ud83d\udcac", text: "Bring up one of these situations with family or friends \u2014 see what they think." },
+    { emoji: "\ud83e\udded", text: "Curious what else is out there? Come back and try a skill you haven't yet." }
+  ];
+  return arr[indexSoFar % arr.length];
+}
+function fallbackNotableMoment(){
+  // Prefer the most genuinely interesting real moment available, in priority order,
+  // and always name the actual situation — a generic line reads as filler here.
+  const switched = state.responses.find(r => r.skillType==='stand' && !r.held);
+  if(switched){
+    const finalText = (switched.finalChoice==='A' ? switched.optionA : switched.optionB);
+    return { emoji: "\ud83d\udd04", text: "On \u201c" + switched.prompt + "\u201d I actually switched sides after the pushback \u2014 I landed on \u201c" + finalText + "\u201d and I'd rather update than defend a first instinct.", isFallback: true };
+  }
+  const wrongPrediction = state.responses.find(r => r.skillType==='simulate' && !r.correct);
+  if(wrongPrediction){
+    return { emoji: "\ud83d\udca5", text: "I predicted this one wrong: \u201c" + wrongPrediction.prompt + "\u201d The obvious answer wasn't what actually happened \u2014 worth remembering.", isFallback: true };
+  }
+  const heldFirm = state.responses.find(r => r.skillType==='stand' && r.held);
+  if(heldFirm){
+    const finalText = (heldFirm.finalChoice==='A' ? heldFirm.optionA : heldFirm.optionB);
+    return { emoji: "\ud83e\uddf1", text: "On \u201c" + heldFirm.prompt + "\u201d I held my position at \u201c" + finalText + "\u201d even after real pushback \u2014 I'd thought it through.", isFallback: true };
+  }
+  if(state.simTotal > 0){
+    return { emoji: "\ud83d\udd2e", text: "I called " + state.simCorrect + " of " + state.simTotal + " real-world outcomes correctly \u2014 I try to think about how things actually play out.", isFallback: true };
+  }
+  return { emoji: "\ud83d\udca1", text: "I worked through several genuinely hard situations without reaching for the easy answer.", isFallback: true };
+}
+function fallbackArchetype(){ return { title: "The Curious Explorer", subtitle: "You tried a genuine mix of situations without settling into just one playstyle yet." }; }
+function fallbackSoWhat(){
+  return [
+    { emoji: "\ud83d\udcac", text: "You show up when a group needs someone to actually name what everyone's dancing around." },
+    { emoji: "\ud83d\udd0e", text: "You tend to be the first to notice when a plan sounds good but won't quite hold up." }
+  ];
+}
+
+let lastReportForShare = null;
+
+function renderReport(breadth, skillCounts){
+  lastReportForShare = { archetype: state.lockedArchetype, soWhat: state.lockedSoWhat, whereIStand: state.lockedWhereIStand, breadth, skillCounts };
+
+  document.getElementById('reportBadge').textContent = "Your Vibe Card";
+  document.getElementById('reportName').textContent = state.testerName + "'s Card";
+  document.getElementById('reportMeta').textContent = state.responses.length + " situations explored \u00b7 " + new Date().toLocaleDateString();
+  document.getElementById('reportSkillLine').textContent = Object.keys(SKILL_META).map(k => SKILL_META[k].icon).join(' ') + "  all five skills practiced";
+
+  document.getElementById('archetypeTitle').textContent = state.lockedArchetype.title;
+  document.getElementById('archetypeSub').textContent = state.lockedArchetype.subtitle;
+  document.getElementById('sowhatList').innerHTML = (state.lockedSoWhat || []).map(s =>
+    '<div class="sowhat-row"><span class="em">' + (s.emoji || "\u2192") + '</span><span>' + s.text + '</span></div>'
+  ).join('');
+
+  const breadthEl = document.getElementById('reportBreadth'); breadthEl.innerHTML = "";
+  Object.keys(breadth).forEach(cat => {
+    const row = document.createElement('div'); row.className='breadth-row';
+    row.innerHTML = "<span>" + cat + "</span><span>" + breadth[cat] + " explored</span>";
+    breadthEl.appendChild(row);
+  });
+
+  if(state.simTotal > 0){
+    document.getElementById('trackRecordSection').style.display = 'block';
+    const trackEl = document.getElementById('reportTrackRecord'); trackEl.innerHTML = "";
+    const row = document.createElement('div'); row.className='track-row';
+    row.innerHTML = "<span>\ud83d\udd2e Prediction accuracy</span><span class=\"n\">" + state.simCorrect + " / " + state.simTotal + " correct</span>";
+    trackEl.appendChild(row);
+  }
+
+  // Where I Stand — always fully populated now, no locked slots. One round, one complete card.
+  // No inline per-card colors needed — the CSS itself already gives every card a white
+  // border and a lime label, so styling stays consistent without an array of variants.
+  const whereEl = document.getElementById('reportWhereIStand');
+  whereEl.innerHTML = state.lockedWhereIStand.map((item) => {
+    return "<div class=\"theme-card\"><span class=\"emoji\">" + (item.emoji || "\ud83d\udcad") + "</span>" +
+      "<div><div class=\"theme-label\">" + item.theme + "</div><div class=\"theme-text\">\"" + item.text + "\"</div></div></div>";
+  }).join('');
+
+  document.getElementById('notableSection').style.display = 'block';
+  document.getElementById('reportNotable').innerHTML =
+    "<div class=\"notable-card\"><span class=\"emoji\">" + (state.lockedNotableMoment.emoji || "\ud83d\udca1") + "</span><div class=\"theme-text\">\"" + state.lockedNotableMoment.text + "\"</div></div>";
+
+  const nextEl = document.getElementById('reportNextSteps');
+  nextEl.innerHTML = state.lockedNextSteps.map((step) => {
+    return "<div class=\"theme-card\"><span class=\"emoji\">" + (step.emoji || "\u2192") + "</span>" +
+      "<div><div class=\"theme-text\">" + step.text + "</div></div></div>";
+  }).join('');
+
+  // Always complete — no continue button, share available immediately.
+  document.getElementById('shareBtn').style.display = 'block';
+
+  goTo('screen-report');
+  playChime();
+  const revealTargets = document.querySelectorAll(
+    '#screen-report .archetype-banner, #screen-report .report-section, #screen-report .footer-note, #screen-report .report-btn'
+  );
+  revealTargets.forEach((el, i) => {
+    el.classList.remove('reveal-in');
+    void el.offsetWidth; // restart the animation on every visit, not just the first
+    el.style.animationDelay = (i * 90) + 'ms';
+    el.classList.add('reveal-in');
+  });
+}
+
+// ---------- SHARE ----------
+function buildShareText(){
+  const r = lastReportForShare;
+  let lines = [state.testerName + "'s Point of View Card \ud83e\udde0"];
+  if(r && r.archetype){ lines.push(r.archetype.title); }
+  lines.push(state.responses.length + " situations explored across 5 skills", "");
+  if(r && r.whereIStand && r.whereIStand.length){
+    r.whereIStand.forEach(item => { lines.push((item.emoji || "\u2022") + " " + item.text); });
+    if(state.lockedNotableMoment){ lines.push(""); lines.push((state.lockedNotableMoment.emoji || "\ud83d\udca1") + " " + state.lockedNotableMoment.text); }
+  } else { lines.push("Explored real situations and figured out where I actually stand."); }
+  if(state.simTotal > 0){ lines.push(""); lines.push("\ud83d\udd2e Prediction accuracy: " + state.simCorrect + "/" + state.simTotal); }
+  return lines.join('\n');
+}
+async function shareReport(){
+  const text = buildShareText(); const title = state.testerName + "'s Point of View Card";
+  if(navigator.share){ try{ await navigator.share({ title:title, text:text }); }catch(e){} }
+  else {
+    try{
+      await navigator.clipboard.writeText(text);
+      const btn = document.getElementById('shareBtn'); const original = btn.textContent;
+      btn.textContent = "Copied! Paste it anywhere"; setTimeout(() => { btn.textContent = original; }, 2200);
+    }catch(e){ alert("Couldn't copy automatically \u2014 you can screenshot the card instead."); }
+  }
+}
+</script>
+</body>
+</html>
