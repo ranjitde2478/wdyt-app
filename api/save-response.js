@@ -3,7 +3,6 @@
 // "someone finished the app, here's their answers and result."
 
 const { put } = require('@vercel/blob');
-
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
@@ -39,7 +38,7 @@ module.exports = async function handler(req, res) {
     };
 
     await put(filename, JSON.stringify(record, null, 2), {
-      access: 'public',
+      access: 'private',
       contentType: 'application/json',
       addRandomSuffix: true
     });

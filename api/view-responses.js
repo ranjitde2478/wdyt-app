@@ -2,7 +2,7 @@
 // Visit this URL with ?password=YOUR_PASSWORD to see a readable table.
 // Nobody without the correct password can see any of this data.
 
-const { list } = require('@vercel/blob');
+const { list, get } = require('@vercel/blob');
 
 function escapeHtml(str) {
   return String(str)
@@ -60,9 +60,11 @@ module.exports = async function handler(req, res) {
 
     const records = await Promise.all(blobs.map(async (b) => {
       try {
-        const fileRes = await fetch(b.url);
-        const data = await fileRes.json();
-        return data;
+        // Private stores require the authenticated get() method -- a plain
+        // fetch(b.url) only works for public blobs and would 403 here.
+        const result = await get(b.url);
+        const text = await new Response(result.stream).text();
+        return JSON.parse(text);
       } catch (e) {
         return null;
       }
