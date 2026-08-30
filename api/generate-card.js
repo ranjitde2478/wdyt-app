@@ -40,7 +40,7 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-5',
-        max_tokens: 1400,
+        max_tokens: 2200,
         messages: [{ role: 'user', content: prompt }]
       })
     });
@@ -54,6 +54,15 @@ module.exports = async function handler(req, res) {
         error: 'The AI service returned an error.',
         detail: data && data.error ? data.error.message : 'Unknown error'
       });
+    }
+
+    // Diagnostic: stop_reason tells us definitively if the response got cut
+    // off before finishing (would show "max_tokens" instead of "end_turn").
+    // This is temporary -- worth removing once generation is confirmed stable.
+    console.log('generate-card: stop_reason =', data.stop_reason,
+      '| response length =', JSON.stringify(data).length);
+    if (data.stop_reason === 'max_tokens') {
+      console.error('generate-card: RESPONSE WAS TRUNCATED -- max_tokens was too low for this request.');
     }
 
     // Success -- hand the raw Anthropic response back to the app.
