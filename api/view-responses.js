@@ -47,7 +47,7 @@ module.exports = async function handler(req, res) {
     if (!suppliedPassword || suppliedPassword !== adminPassword) {
       res.setHeader('Content-Type', 'text/html');
       return res.status(401).send(renderPage(`
-        <h1>WDYT Responses</h1>
+        <h1>WDYT Responses TEST123</h1>
         <p>Enter the password to view saved responses.</p>
         <form method="GET">
           <input type="password" name="password" placeholder="Password" autofocus />
@@ -90,7 +90,7 @@ module.exports = async function handler(req, res) {
 
     res.setHeader('Content-Type', 'text/html');
     return res.status(200).send(renderPage(`
-      <h1>WDYT Responses</h1>
+      <h1>WDYT Responses TEST123</h1>
       <p class="count">${valid.length} completed session${valid.length === 1 ? '' : 's'}</p>
       <table>
         <tr><th>Name</th><th>Completed</th><th>Vibe</th><th>Predictions</th><th>Answers</th></tr>
