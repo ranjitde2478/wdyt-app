@@ -64,7 +64,7 @@ module.exports = async function handler(req, res) {
     const errorMessages = [];
     const records = await Promise.all(blobs.map(async (b) => {
       try {
-        const result = await get(b.url);
+        const result = await get(b.url, { access: 'private' });
         const text = await new Response(result.stream).text();
         return JSON.parse(text);
       } catch (e) {
