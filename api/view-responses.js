@@ -61,6 +61,7 @@ module.exports = async function handler(req, res) {
       blobs.map(b => b.pathname || b.url));
 
     let readErrors = 0;
+    const errorMessages = [];
     const records = await Promise.all(blobs.map(async (b) => {
       try {
         const result = await get(b.url);
@@ -68,6 +69,7 @@ module.exports = async function handler(req, res) {
         return JSON.parse(text);
       } catch (e) {
         readErrors++;
+        errorMessages.push(e.message);
         console.error('view-responses: failed to read blob', b.pathname || b.url, '--', e.message);
         return null;
       }
@@ -77,7 +79,8 @@ module.exports = async function handler(req, res) {
       new Date(b.completedAt) - new Date(a.completedAt)
     );
 
-    const debugLine = `<p class="muted">Debug: found ${blobs.length} file(s) in storage, ${readErrors} failed to read.</p>`;
+    const debugLine = `<p class="muted">Debug: found ${blobs.length} file(s) in storage, ${readErrors} failed to read.</p>` +
+      (errorMessages.length ? `<pre style="color:#ff8080; font-size:11px;">${escapeHtml(errorMessages[0])}</pre>` : '');
 
     const rows = valid.map(r => `
       <tr>
