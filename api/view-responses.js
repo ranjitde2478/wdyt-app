@@ -47,7 +47,7 @@ module.exports = async function handler(req, res) {
     if (!suppliedPassword || suppliedPassword !== adminPassword) {
       res.setHeader('Content-Type', 'text/html');
       return res.status(401).send(renderPage(`
-        <h1>WDYT Responses TEST123</h1>
+        <h1>WDYT Responses</h1>
         <p>Enter the password to view saved responses.</p>
         <form method="GET">
           <input type="password" name="password" placeholder="Password" autofocus />
@@ -57,15 +57,18 @@ module.exports = async function handler(req, res) {
     }
 
     const { blobs } = await list({ prefix: 'responses/', limit: 1000 });
+    console.log('view-responses: list() found', blobs.length, 'blob(s) with prefix "responses/":',
+      blobs.map(b => b.pathname || b.url));
 
+    let readErrors = 0;
     const records = await Promise.all(blobs.map(async (b) => {
       try {
-        // Private stores require the authenticated get() method -- a plain
-        // fetch(b.url) only works for public blobs and would 403 here.
         const result = await get(b.url);
         const text = await new Response(result.stream).text();
         return JSON.parse(text);
       } catch (e) {
+        readErrors++;
+        console.error('view-responses: failed to read blob', b.pathname || b.url, '--', e.message);
         return null;
       }
     }));
@@ -73,6 +76,8 @@ module.exports = async function handler(req, res) {
     const valid = records.filter(Boolean).sort((a, b) =>
       new Date(b.completedAt) - new Date(a.completedAt)
     );
+
+    const debugLine = `<p class="muted">Debug: found ${blobs.length} file(s) in storage, ${readErrors} failed to read.</p>`;
 
     const rows = valid.map(r => `
       <tr>
@@ -90,8 +95,9 @@ module.exports = async function handler(req, res) {
 
     res.setHeader('Content-Type', 'text/html');
     return res.status(200).send(renderPage(`
-      <h1>WDYT Responses TEST123</h1>
+      <h1>WDYT Responses</h1>
       <p class="count">${valid.length} completed session${valid.length === 1 ? '' : 's'}</p>
+      ${debugLine}
       <table>
         <tr><th>Name</th><th>Completed</th><th>Vibe</th><th>Predictions</th><th>Answers</th></tr>
         ${rows || '<tr><td colspan="5" class="muted">No responses yet.</td></tr>'}
