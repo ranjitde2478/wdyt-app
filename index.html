@@ -32,7 +32,8 @@
   .seg-fill{ height:100%; background:var(--acid); width:0%; transition:width 0.15s linear; }
   .back-hint{ text-align:center; font-family:var(--font-display); font-size:10.5px; opacity:0.5; font-weight:700; padding:6px 0 0; letter-spacing:0.6px; text-transform:uppercase; }
   .mute-btn{ position:absolute; top:12px; right:14px; width:32px; height:32px; border-radius:0; border:1.5px solid rgba(255,255,255,0.4); background:transparent; color:#fff; font-size:14px; display:flex; align-items:center; justify-content:center; z-index:4; }
-  .skill-chip{ position:absolute; top:12px; left:14px; border:1.5px solid var(--acid); color:var(--acid); background:transparent; padding:4px 10px; font-family:var(--font-display); font-size:10px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; z-index:4; }
+  .skill-chip-big{ font-family:var(--font-display); font-size:13px; font-weight:700; letter-spacing:0.7px; text-transform:uppercase; color:var(--acid); margin-bottom:16px; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .skill-chip-big .dot{ width:6px; height:6px; background:var(--acid); border-radius:50%; flex-shrink:0; }
 
   .drag-zone{ flex:1; position:relative; overflow:hidden; }
   .drag-layer{ position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; will-change:transform,opacity; }
@@ -174,7 +175,6 @@
     <div class="stage-glow"></div>
     <div class="stage-overlay"></div>
     <div class="stage-content">
-      <div class="skill-chip" id="skillChip"></div>
       <button class="mute-btn" id="muteBtn" onclick="toggleMute()">&#128266;</button>
       <div class="segbar" id="segbar"></div>
       <div class="back-hint" id="backHint"></div>
@@ -274,7 +274,7 @@ const SKILL_META = {
 };
 
 const EPISODES = [
-{ id:"st1", skillType:"stand", cat:"World Stage",
+{ id:"st1", storyIcon:"🌧️", skillType:"stand", cat:"World Stage",
     hook:"In one town, it started raining money. Literally.",
     story:"Some companies now \u201cseed\u201d clouds \u2014 flying planes into them to make it rain exactly where they want. But rain made here might mean less rain somewhere else. So who gets to decide who gets the rain?",
     reflection:"If a company could make it rain over your neighborhood, but it meant less rain elsewhere \u2014 would that be fair?",
@@ -282,7 +282,7 @@ const EPISODES = [
     chA:"But what if the \u201cfirst\u201d company is just the richest one \u2014 does that make it any less fair?",
     chB:"But if it belongs to no one, what happens to farmers who desperately need rain and nobody's allowed to help?",
     revA:58, revB:42 },
-{ id:"st3", skillType:"stand", cat:"Music & Art",
+{ id:"st3", storyIcon:"🤖", skillType:"stand", cat:"Music & Art",
     hook:"The song's stuck in everyone's head. It was written by AI in eleven seconds.",
     story:"AI can now write catchy, well-structured songs almost instantly. Some people say it's genuinely music; others say something's missing if no human struggled to make it.",
     reflection:"Does a song written by AI count as \u201creal\u201d music?",
@@ -290,7 +290,7 @@ const EPISODES = [
     chA:"What if you later found out your favorite song ever was written entirely by AI \u2014 would that change how you feel about it?",
     chB:"What if a human just types one sentence and AI does literally everything else \u2014 is that still \u201chuman enough\u201d?",
     revA:47, revB:53 },
-{ id:"nu1", skillType:"nuance", cat:"World Stage",
+{ id:"nu1", storyIcon:"🤝", skillType:"nuance", cat:"World Stage",
     hook:"A country is hit hard. A rival offers help. Nobody's sure whether to say yes.",
     story:"Accepting outside help after a disaster can save lives fast \u2014 but it can also come with strings attached, or handed to a country you don't fully trust.",
     baselineQ:"Should a country generally accept help after a disaster, even from a rival?",
@@ -300,7 +300,7 @@ const EPISODES = [
       {text:"What if refusing means people go without food or shelter?", flipPct:71},
       {text:"What if accepting means giving up some control over how rebuilding happens?", flipPct:18}
     ] },
-{ id:"nu3", skillType:"nuance", cat:"Music & Art",
+{ id:"nu3", storyIcon:"🎸", skillType:"nuance", cat:"Music & Art",
     hook:"The band's still touring. Every founding member has quietly left.",
     story:"Some bands keep performing under a beloved name for decades after every original member is gone \u2014 technically legal, but it raises a real question about what fans are actually paying for.",
     baselineQ:"Should a band be allowed to keep performing under the same name once every original member has left?",
@@ -310,7 +310,7 @@ const EPISODES = [
       {text:"What if fans buying tickets don't realize no original members are left?", flipPct:74},
       {text:"What if the original members gave their blessing before leaving?", flipPct:61}
     ] },
-{ id:"ar1", skillType:"argument", cat:"World Stage",
+{ id:"ar1", storyIcon:"🔔", skillType:"argument", cat:"World Stage",
     hook:"The bell rings. Half the class is barely awake.",
     story:"Sleep researchers and parents have argued for years about when the school day should actually start for teenagers.",
     claim:"School should start later in the day for teenagers.",
@@ -320,7 +320,7 @@ const EPISODES = [
       {key:"B", text:"Grades and focus measurably improve with more rest.", pct:38},
       {key:"C", text:"It would match how most adults' workdays actually start.", pct:11}
     ] },
-{ id:"ar3", skillType:"argument", cat:"Music & Art",
+{ id:"ar3", storyIcon:"🎧", skillType:"argument", cat:"Music & Art",
     hook:"You used to buy the song. Now you rent the whole library.",
     story:"Streaming replaced buying individual songs almost entirely \u2014 but not everyone thinks that trade was a fair one.",
     claim:"Streaming platforms should let you buy individual songs again, not just subscriptions.",
@@ -330,7 +330,7 @@ const EPISODES = [
       {key:"B", text:"Artists could get paid more directly per song sold.", pct:44},
       {key:"C", text:"It hands listeners more control over what they actually pay for.", pct:21}
     ] },
-{ id:"an1", skillType:"analogy", cat:"World Stage",
+{ id:"an1", storyIcon:"📵", skillType:"analogy", cat:"World Stage",
     hook:"One country blocks the app overnight. Millions of accounts, gone.",
     story:"A country bans a popular foreign app over data-privacy concerns, cutting off millions of users with no warning.",
     callPrompt:"This is most like:",
@@ -339,7 +339,7 @@ const EPISODES = [
       {key:"B", text:"A store refusing to stock a product it doesn't fully trust", pct:46},
       {key:"C", text:"A school banning a book nobody on staff has actually read", pct:20}
     ] },
-{ id:"an3", skillType:"analogy", cat:"Music & Art",
+{ id:"an3", storyIcon:"🎤", skillType:"analogy", cat:"Music & Art",
     hook:"Millions of views. The artist got a few hundred dollars and a \u201cthank you.\u201d",
     story:"A brand features a rising artist's song in a big ad campaign, paying very little but offering huge exposure.",
     callPrompt:"This is most like:",
@@ -348,7 +348,7 @@ const EPISODES = [
       {key:"B", text:"A street performer getting one lucky, life-changing break", pct:31},
       {key:"C", text:"A restaurant trading free food for a good review", pct:17}
     ] },
-{ id:"si1", skillType:"simulate", cat:"World Stage",
+{ id:"si1", storyIcon:"📅", skillType:"simulate", cat:"World Stage",
     hook:"Monday, Tuesday, Wednesday, Thursday. Then nothing.",
     story:"Several real schools cut down to a four-day week. Nobody was fully sure what it would do to how stressed students actually felt.",
     predictQ:"What happens to student stress levels after a school moves to a 4-day week?",
@@ -356,7 +356,7 @@ const EPISODES = [
     correctKey:"B",
     revealText:"Real trials have found mixed, often underwhelming results. The extra day off is frequently offset by longer, more packed days the rest of the week \u2014 overall stress often ends up close to where it started.",
     reflection:"Systems don't always respond the way the headline change suggests." },
-{ id:"si4", skillType:"simulate", cat:"Music & Art",
+{ id:"si4", storyIcon:"💿", skillType:"simulate", cat:"Music & Art",
     hook:"You used to own the song. Now you just borrow all of them, forever, for one monthly fee.",
     story:"The music industry worried unlimited-streaming subscriptions would crush how much money the industry actually made, compared to buying songs one at a time.",
     predictQ:"What happened to total music industry revenue once streaming subscriptions took over from individual purchases?",
@@ -415,9 +415,6 @@ function makeDragZone(el, layerEl, opts){
   function reset(){ layerEl.style.transition='transform 0.32s cubic-bezier(.22,1.1,.36,1), opacity 0.32s ease'; layerEl.style.transform='translateY(0)'; layerEl.style.opacity='1'; }
   el.addEventListener('pointerdown', e => {
     if(isTransitioning) return;
-    // Note: previously excluded gestures starting on .opt-pill here to protect button taps —
-    // but canForward()/canBackward() already gate which directions can commit on each step,
-    // so that exclusion was unnecessary and was blocking backward swipes on option-heavy screens.
     dragging = true; moved = false; startY = e.clientY; lastY = startY; downTime = Date.now(); pointerId = e.pointerId;
     layerEl.style.transition = 'none';
     try{ el.setPointerCapture(pointerId); }catch(err){}
@@ -475,8 +472,6 @@ function currentEpisode(){ return state.queue[state.idx]; }
 function setBg(){ /* intentionally no-op — true black stays constant across every episode in this direction, not cycled per-episode gradients */ }
 
 function buildSegbar(){
-  // Flat 10-step bar — no leg grouping, since the whole round is short enough
-  // now to just show as one continuous strip of progress.
   const bar = document.getElementById('segbar'); bar.innerHTML = "";
   state.queue.forEach(() => {
     const seg = document.createElement('div'); seg.className='seg'; seg.innerHTML='<div class="seg-fill"></div>';
@@ -496,10 +491,6 @@ function updateBackHint(){
     hint.style.display='block'; hint.textContent = '\u2304 swipe down for previous';
   } else { hint.style.display='none'; }
 }
-function updateSkillChip(){
-  const meta = SKILL_META[currentEp.skillType];
-  document.getElementById('skillChip').textContent = meta.icon + ' ' + meta.label;
-}
 
 const dragZone = document.getElementById('dragZone');
 const dragLayer = document.getElementById('dragLayer');
@@ -507,12 +498,12 @@ const stepInner = document.getElementById('stepInner');
 
 // ---------- HOOK / STORY (shared across all skill types) ----------
 function renderIntro(){
-  // Hook + story combined into one screen — one swipe instead of two, per the
-  // "trim per-item weight" fix: every episode now costs one fewer full step.
-  stepState = 'hook'; setBg(); updateSegProgress(0.2); updateSkillChip();
+  stepState = 'hook'; setBg(); updateSegProgress(0.2);
+  const meta = SKILL_META[currentEp.skillType];
   stepInner.innerHTML =
-    '<div class="stage-tap-inner"><div><div class="icon-badge">' + SKILL_META[currentEp.skillType].icon +
-    '</div><div class="hook">' + currentEp.hook + '</div>' +
+    '<div class="stage-tap-inner"><div><div class="icon-badge">' + currentEp.storyIcon +
+    '</div><div class="skill-chip-big"><span class="dot"></span>' + meta.label + '</div>' +
+    '<div class="hook">' + currentEp.hook + '</div>' +
     '<div class="story" style="margin-top:16px; font-size:16px; opacity:0.92;">' + currentEp.story + '</div></div>' +
     '<div class="swipe-cue"><span class="chev">\u2303</span> swipe up</div></div>';
   updateBackHint();
@@ -522,17 +513,18 @@ function renderIntro(){
 function renderCall(){
   if(currentEp.skillType === 'nuance'){ renderCallBaseline(); return; }
   stepState = 'call'; updateSegProgress(0.6);
+  const meta = SKILL_META[currentEp.skillType];
+  const tag = '<div class="skill-chip-big"><span class="dot"></span>' + meta.label + '</div>';
   if(currentEp.skillType === 'stand'){
     stepInner.innerHTML =
       '<div style="flex:1; display:flex; flex-direction:column;">' +
-      '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + SKILL_META.stand.icon + '</div>' +
+      '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + currentEp.storyIcon + '</div>' + tag +
       '<div class="call-q">' + currentEp.reflection + '</div></div>' +
       '<div class="options">' +
       '<div class="opt-pill" id="pillA" onclick="pickChoice(\'A\')"><span class="letter">A</span><span>' + currentEp.a + '</span></div>' +
       '<div class="opt-pill" id="pillB" onclick="pickChoice(\'B\')"><span class="letter">B</span><span>' + currentEp.b + '</span></div>' +
       '</div></div>';
   } else {
-    // argument / analogy / simulate share a 3-option layout
     const prompt = currentEp.skillType === 'simulate' ? currentEp.predictQ : currentEp.callPrompt;
     const claimLine = currentEp.claim ? '<div class="call-sub">' + currentEp.claim + '</div>' : '';
     let optsHtml = '';
@@ -544,7 +536,7 @@ function renderCall(){
     });
     stepInner.innerHTML =
       '<div style="flex:1; display:flex; flex-direction:column;">' +
-      '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + SKILL_META[currentEp.skillType].icon + '</div>' +
+      '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + currentEp.storyIcon + '</div>' + tag +
       claimLine + '<div class="call-q">' + prompt + '</div></div>' +
       '<div class="options">' + optsHtml + '</div></div>';
   }
@@ -553,9 +545,10 @@ function renderCall(){
 
 function renderCallBaseline(){
   stepState = 'callBaseline'; updateSegProgress(0.55);
+  const tag = '<div class="skill-chip-big"><span class="dot"></span>' + SKILL_META.nuance.label + '</div>';
   stepInner.innerHTML =
     '<div style="flex:1; display:flex; flex-direction:column;">' +
-    '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + SKILL_META.nuance.icon + '</div>' +
+    '<div class="call-wrap"><div class="icon-badge small" style="align-self:center;">' + currentEp.storyIcon + '</div>' + tag +
     '<div class="call-q">' + currentEp.baselineQ + '</div></div>' +
     '<div class="options">' +
     '<div class="opt-pill" onclick="pickBaseline(true)"><span class="letter">Y</span><span>Generally, yes</span></div>' +
@@ -565,13 +558,14 @@ function renderCallBaseline(){
 }
 function renderCallConditions(){
   stepState = 'callConditions'; updateSegProgress(0.75);
+  const tag = '<div class="skill-chip-big"><span class="dot"></span>' + SKILL_META.nuance.label + '</div>';
   let optsHtml = '';
   currentEp.conditions.forEach((c, i) => {
     optsHtml += '<div class="opt-pill" onclick="pickCondition(' + i + ')"><span class="letter">' + (i+1) + '</span><span>' + c.text + '</span></div>';
   });
   stepInner.innerHTML =
     '<div style="flex:1; display:flex; flex-direction:column;">' +
-    '<div class="call-wrap"><div class="call-sub">Which of these would most likely flip your answer?</div>' +
+    '<div class="call-wrap">' + tag + '<div class="call-sub">Which of these would most likely flip your answer?</div>' +
     '<div class="call-q" style="font-size:19px;">Pick the strongest one</div></div>' +
     '<div class="options">' + optsHtml + '</div></div>';
   updateBackHint();
@@ -579,10 +573,6 @@ function renderCallConditions(){
 
 // ---------- PICK HANDLERS ----------
 function pickChoice(letter){
-  // Restored: the counter-argument moment is genuinely central to what "Take a
-  // Stand" tests (does a position hold up under pushback), and now only affects
-  // 2 of 10 total items instead of every episode — a much smaller total cost
-  // than when this was cut earlier in the build.
   playPop(); state.currentChoice = letter;
   document.getElementById('pillA').classList.toggle('selected', letter==='A');
   document.getElementById('pillB').classList.toggle('selected', letter==='B');
@@ -770,8 +760,6 @@ makeDragZone(dragZone, dragLayer, {
 
 // ---------- FLOW ----------
 function buildQueue(){
-  // 2 rounds of all 5 skills = 10 total, one continuous round — no legs, no
-  // mid-session pause. Order shuffled fresh each round so it never feels mechanical.
   const skillKeys = Object.keys(SKILL_META);
   const bySkill = {};
   skillKeys.forEach(k => { bySkill[k] = shuffle(EPISODES.filter(e => e.skillType === k)); });
@@ -797,7 +785,6 @@ function advanceEpisode(){
   if(state.idx >= state.queue.length){ isTransitioning = false; viewCard(); return; }
   currentEp = currentEpisode(); renderIntro(); playIn(dragLayer, 'up');
 }
-// Single entry point for the end-of-round card. Name is captured once.
 function viewCard(){
   if(!state.testerName){ document.getElementById('nameBackdrop').style.display = 'flex'; }
   else { generateAndShowCard(); }
@@ -816,8 +803,6 @@ function submitNameAndFinish(){
 
 // ---------- STORAGE ----------
 async function saveResponses(){
-  // Fire-and-forget: if this fails for any reason, the visitor still sees
-  // their finished card. We never let tracking break the actual experience.
   try{
     const payload = {
       testerName: state.testerName,
@@ -864,8 +849,6 @@ function stopLoadingCycle(){
 }
 
 async function generateAndShowCard(){
-  // No leg/progressive logic anymore — one round, one complete report,
-  // generated once at the end. Everything below is requested in a single call.
   goTo('screen-loading');
   startLoadingCycle();
 
@@ -898,10 +881,7 @@ async function generateAndShowCard(){
       "\n\nRespond with ONLY valid JSON, no markdown fences, no preamble, in this exact shape:\n" + schema +
       "\nWarm, specific, energizing, age-appropriate for 10-15. Never imply a right or wrong answer (except for the See What's Coming predictions, which do have a correct outcome). Never use words like \"assignment\", \"homework\", \"exercise\", or \"task\". The vibe title must feel earned, specific, and describe an approach \u2014 avoid generic titles like 'The Thinker', and avoid anything that sounds like a fixed personality diagnosis rather than a current way of engaging. The soWhat lines should read confidently \u2014 no hedging language like 'might' or 'could' \u2014 since a disclaimer elsewhere already frames this as a signal, not a verdict. Return EXACTLY " + THEME_COUNT + " items in whereIStand and EXACTLY " + NEXT_COUNT + " items in nextSteps \u2014 not more, not fewer.";
 
-    // One retry before accepting the fallback — most failures here are transient.
     async function callClaude(){
-      // Calls our own backend instead of Anthropic directly -- the backend
-      // holds the real API key safely and this app never sees it.
       const response = await fetch("/api/generate-card", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt })
@@ -944,10 +924,6 @@ async function generateAndShowCard(){
   renderReport(breadth, skillCounts);
 }
 
-// Fallbacks are written to sit convincingly alongside AI-generated cards: a real
-// theme name (never the raw category), first person, two sentences, same voice.
-// They're also flagged isFallback so a later successful call can upgrade them
-// rather than leaving a visibly plainer card locked in for the whole session.
 function fallbackThemeCard(indexSoFar){
   const r = state.responses[Math.min(indexSoFar, state.responses.length - 1)];
   let theme = "", line = "";
@@ -983,8 +959,6 @@ function fallbackNextStepItem(indexSoFar){
   return arr[indexSoFar % arr.length];
 }
 function fallbackNotableMoment(){
-  // Prefer the most genuinely interesting real moment available, in priority order,
-  // and always name the actual situation — a generic line reads as filler here.
   const switched = state.responses.find(r => r.skillType==='stand' && !r.held);
   if(switched){
     const finalText = (switched.finalChoice==='A' ? switched.optionA : switched.optionB);
@@ -1043,9 +1017,6 @@ function renderReport(breadth, skillCounts){
     trackEl.appendChild(row);
   }
 
-  // Where I Stand — always fully populated now, no locked slots. One round, one complete card.
-  // No inline per-card colors needed — the CSS itself already gives every card a white
-  // border and a lime label, so styling stays consistent without an array of variants.
   const whereEl = document.getElementById('reportWhereIStand');
   whereEl.innerHTML = state.lockedWhereIStand.map((item) => {
     return "<div class=\"theme-card\"><span class=\"emoji\">" + (item.emoji || "\ud83d\udcad") + "</span>" +
@@ -1062,7 +1033,6 @@ function renderReport(breadth, skillCounts){
       "<div><div class=\"theme-text\">" + step.text + "</div></div></div>";
   }).join('');
 
-  // Always complete — no continue button, share available immediately.
   document.getElementById('shareBtn').style.display = 'block';
 
   goTo('screen-report');
@@ -1072,7 +1042,7 @@ function renderReport(breadth, skillCounts){
   );
   revealTargets.forEach((el, i) => {
     el.classList.remove('reveal-in');
-    void el.offsetWidth; // restart the animation on every visit, not just the first
+    void el.offsetWidth;
     el.style.animationDelay = (i * 90) + 'ms';
     el.classList.add('reveal-in');
   });
