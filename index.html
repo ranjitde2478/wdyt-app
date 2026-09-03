@@ -221,7 +221,7 @@
   <!-- REPORT -->
   <div class="screen" id="screen-report">
     <div class="report-inner">
-      <span class="badge" id="reportBadge">Your Point of View Card</span>
+      <span class="badge" id="reportBadge">Your Vibe Card</span>
       <h1 id="reportName"></h1>
       <p class="muted" id="reportMeta"></p>
       <p class="muted" id="reportSkillLine" style="margin-top:2px; margin-bottom:20px;"></p>
@@ -1107,7 +1107,7 @@ function hydrateReportWithAI(breadth, skillCounts){
 // ---------- SHARE ----------
 function buildShareText(){
   const r = lastReportForShare;
-  let lines = [state.testerName + "'s Point of View Card \ud83e\udde0"];
+  let lines = [state.testerName + "'s Vibe Card \ud83e\udde0"];
   if(r && r.archetype){ lines.push(r.archetype.title); }
   lines.push(state.responses.length + " situations explored across 5 skills", "");
   if(r && r.whereIStand && r.whereIStand.length){
@@ -1118,7 +1118,7 @@ function buildShareText(){
   return lines.join('\n');
 }
 async function shareReport(){
-  const text = buildShareText(); const title = state.testerName + "'s Point of View Card";
+  const text = buildShareText(); const title = state.testerName + "'s Vibe Card";
   if(navigator.share){ try{ await navigator.share({ title:title, text:text }); }catch(e){} }
   else {
     try{
