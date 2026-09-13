@@ -170,6 +170,7 @@
       <div class="skill-preview">
         <span>&#127919; Take a Stand</span><span>&#128269; Read the Nuance</span><span>&#128483;&#65039; Best Argument</span><span>&#128279; Connect the Dots</span><span>&#128302; See What's Coming</span>
       </div>
+      <input type="text" class="name-input" id="firstNameInput" placeholder="Your first name (optional)" style="max-width:280px; margin-bottom:16px;" autocapitalize="words" />
       <button class="cta-btn" onclick="ensureAudio(); startExperience();">Start &#9656; ~3 min</button>
       <div class="micro-disclaimer">No grades. No judging. Nothing here is right or wrong &mdash; except a couple of surprises.</div>
     </div>
@@ -204,24 +205,16 @@
     </div>
   </div>
 
-  <!-- No mid-session pause: only 10 questions total now, per direct feedback
-       that a sneak peek isn't needed once the round is already short. -->
+  <!-- Handle capture moved to AFTER the card itself -- see "Keep This
+       Going" inline section within the report screen below. Asking upfront,
+       before delivering any value, was the likely cause of drop-off right at
+       the finish line for cold ad traffic. -->
 
-  <!-- NAME SHEET -->
-  <div class="sheet-backdrop" id="nameBackdrop" style="display:none;">
-    <div class="sheet">
-      <div class="label">Almost there</div>
-      <div class="text" style="margin-bottom:8px;">What's your Instagram handle?</div>
-      <p style="color:var(--gray); font-size:13px; line-height:1.45; margin:0 0 16px;">We'll remember this on your device, so if you play again later your Vibe history stays connected to you.</p>
-      <input type="text" class="name-input" id="nameInput" placeholder="@yourhandle" autocapitalize="none" />
-      <button class="sheet-btn hold" style="width:100%;" onclick="submitNameAndFinish()">See my card &#9656;</button>
-    </div>
-  </div>
 
   <!-- REPORT -->
   <div class="screen" id="screen-report">
     <div class="report-inner">
-      <span class="badge" id="reportBadge">Your Vibe Card</span>
+      <span class="badge" id="reportBadge">Your Point of View Card</span>
       <h1 id="reportName"></h1>
       <p class="muted" id="reportMeta"></p>
       <p class="muted" id="reportSkillLine" style="margin-top:2px; margin-bottom:20px;"></p>
@@ -256,14 +249,26 @@
       </div>
       <p class="footer-note">This card is a signal from today's mix of situations &mdash; not a verdict, not a grade, and not a finished picture of who you are.</p>
 
-      <!-- No continue button needed — one round, always complete. -->
+      <div class="report-section" id="saveHandleSection" style="display:none;">
+        <h3>Keep This Going</h3>
+        <p style="font-size:13px; color:var(--gray); line-height:1.5; margin-bottom:14px;">Save your Instagram handle and we'll remember you on this device, so next time you can see how your Vibe changes.</p>
+        <input type="text" class="name-input" id="postCardHandleInput" placeholder="@yourhandle" autocapitalize="none" style="margin-bottom:10px;" />
+        <button class="report-btn no-print" id="saveHandleBtn" onclick="submitPostCardHandle()" style="background:var(--acid); color:var(--ink); border-color:var(--acid);">Save my handle</button>
+      </div>
+
+      <div class="report-section" id="emailOptInSection">
+        <h3>New Episodes, By Email</h3>
+        <p style="font-size:13px; color:var(--gray); line-height:1.5; margin-bottom:14px;">Totally separate from the above &mdash; just an email when new situations go live. Optional, and only used for that.</p>
+        <input type="email" class="name-input" id="emailOptInInput" placeholder="you@example.com" autocapitalize="none" style="margin-bottom:10px;" />
+        <button class="report-btn no-print" id="emailOptInBtn" onclick="submitEmailOptIn()">Notify me</button>
+      </div>
+
       <button class="report-btn no-print" id="shareBtn" onclick="shareReport()" style="background:#20242E;">Share my card</button>
       <button class="report-btn no-print" onclick="window.print()">Save / Print this card</button>
     </div>
   </div>
 
 <script>
-// ---------- CONTENT: 20 episodes, 4 per skill ----------
 const SKILL_META = {
   stand:    { label:"Take a Stand",          icon:"\ud83c\udfaf" },
   nuance:   { label:"Read the Nuance",       icon:"\ud83d\udd0d" },
@@ -362,7 +367,53 @@ const EPISODES = [
     options:[ {key:"A", text:"It kept shrinking, same trend as before"}, {key:"B", text:"It stabilized and then grew again"}, {key:"C", text:"It collapsed completely"} ],
     correctKey:"B",
     revealText:"Revenue actually stabilized and then grew again. Subscriptions turned out to be more sustainable than one-time purchases had become, even as artists still argue over how that money gets split.",
-    reflection:"An industry in decline doesn't always keep declining \u2014 sometimes the model just needed to change, not the product." }
+    reflection:"An industry in decline doesn't always keep declining \u2014 sometimes the model just needed to change, not the product." },
+
+{ id:"sp-stand", storyIcon:"🎮", skillType:"stand", cat:"Sports & Gaming",
+    hook:"The team's star player got benched two matches before the finals. For a keybind nobody thought was against the rules.",
+    story:"A pro esports team found out an opposing coach had flagged their star player's custom macro setup as against a rule nobody had enforced before. The team pulled him rather than risk a bigger penalty later.",
+    reflection:"If a rule was never really enforced before, is it fair to punish someone for breaking it now?",
+    a:"Yes \u2014 a rule's a rule, even if nobody enforced it before", b:"No \u2014 if nobody said it counted, it's not fair to punish it now",
+    chA:"But what if enforcing it \u2018starting now\u2019 means every past winner technically cheated too \u2014 do you undo those results?",
+    chB:"But what if the other team spent months making sure they never got close to breaking that same rule?",
+    revA:39, revB:61 },
+{ id:"sp-nuance", storyIcon:"🏆", skillType:"nuance", cat:"Sports & Gaming",
+    hook:"Every kid on the team got the same trophy. The team that lost every game got one too.",
+    story:"Youth leagues have argued for years about whether giving every kid a trophy helps them stay motivated, or quietly teaches them that showing up is the same as winning.",
+    baselineQ:"Should every kid on a youth sports team get a trophy, win or lose?",
+    baselineYesPct:41,
+    conditions:[
+      {text:"What if the team genuinely improved a lot over the season, even without winning?", flipPct:68},
+      {text:"What if only the actual winning team gets a trophy, and everyone else gets nothing at all?", flipPct:57},
+      {text:"What if the kids are old enough to already understand the difference between winning and trying?", flipPct:44}
+    ] },
+{ id:"sp-argument", storyIcon:"🕹️", skillType:"argument", cat:"Sports & Gaming",
+    hook:"The chess club gets a varsity jacket. The esports team that just won regionals gets nothing.",
+    story:"Some schools have started recognizing competitive gaming as an official sport, with the same funding and recognition as basketball or track \u2014 others still treat it like an after-school club.",
+    claim:"Competitive esports should count as an official school sport, with the same recognition as traditional sports.",
+    callPrompt:"If you wanted to convince a skeptical school board, which would you lead with?",
+    options:[
+      {key:"A", text:"It takes just as much practice, strategy, and teamwork as any other sport.", pct:33},
+      {key:"B", text:"Esports scholarships to college are now real and growing fast.", pct:45},
+      {key:"C", text:"It gives kids who aren't into traditional sports a real shot at being on a team.", pct:22}
+    ] },
+{ id:"sp-analogy", storyIcon:"💰", skillType:"analogy", cat:"Sports & Gaming",
+    hook:"People found a way to turn free in-game items into real cash. The game shut it down overnight.",
+    story:"A popular game had an item-trading system players started using to make real money on the side \u2014 until the company suddenly disabled it, wiping out what people had built.",
+    callPrompt:"This is most like:",
+    options:[
+      {key:"A", text:"A bank suddenly freezing an account because of how the money was earned", pct:40},
+      {key:"B", text:"A landlord changing the rules on tenants who found a loophole in the lease", pct:35},
+      {key:"C", text:"A store discontinuing a product line without much warning", pct:25}
+    ] },
+{ id:"sp-simulate", storyIcon:"🎰", skillType:"simulate", cat:"Sports & Gaming",
+    hook:"The game used to sell mystery boxes \u2014 pay real money, get a random item inside. Now it just lets you buy exactly what you want.",
+    story:"A 'loot box' is basically a surprise box you pay for without knowing what's inside \u2014 sometimes it's something great, usually it's not. They made games huge amounts of money for years, even as regulators and players pushed back on them.",
+    predictQ:"What happened to overall player spending after a major game replaced loot boxes with direct, guaranteed purchases?",
+    options:[ {key:"A", text:"Spending dropped a lot \u2014 the random-chance thrill was driving purchases"}, {key:"B", text:"Spending stayed about the same \u2014 people still wanted the items"}, {key:"C", text:"Spending went up \u2014 clearer pricing made people trust it more"} ],
+    correctKey:"B",
+    revealText:"Spending mostly held steady. Turns out people weren't just chasing the gamble \u2014 they wanted the items themselves, and were willing to pay directly once given the option.",
+    reflection:"People's motivations are often more straightforward than the systems designed around them assume." }
 ];
 
 const GRADIENTS = [
@@ -373,15 +424,13 @@ const GRADIENTS = [
 const BURST_EMOJI = ["\u2728","\ud83d\udd25","\ud83d\udc80","\ud83d\udcad","\u2b50"];
 const REVEAL_TITLES = ["Here\u2019s where you stand", "The verdict is in", "Let\u2019s see the split", "Where you land", "Squad check"];
 
-// ---------- STATE ----------
-let state = { testerName:"", testerId:"", queue:[], idx:0, currentChoice:null, currentBaseline:null,
+let state = { firstName:"", testerName:"", testerId:"", queue:[], idx:0, currentChoice:null, currentBaseline:null,
   simCorrect:0, simTotal:0, responses:[], lockedArchetype:null, lockedSoWhat:null,
   lockedWhereIStand:[], lockedNotableMoment:null, lockedNextSteps:[] };
 let currentEp = null;
-let stepState = 'hook'; // hook -> story -> call[/callBaseline -> callConditions] -> reveal
+let stepState = 'hook';
 let isTransitioning = false;
 
-// ---------- SOUND ----------
 let audioCtx = null, audioMuted = false;
 function ensureAudio(){
   if(!audioCtx){ try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} }
@@ -407,7 +456,6 @@ function playChime(){ tone(659, 0.35, 'sine', 0.08); tone(880, 0.4, 'sine', 0.07
 function playPop(){ tone(520, 0.1, 'triangle', 0.06); }
 function playMiss(){ tone(280, 0.3, 'sine', 0.06); tone(220, 0.35, 'sine', 0.05, 0.1); }
 
-// ---------- GESTURE ENGINE ----------
 function makeDragZone(el, layerEl, opts){
   let startY=0, lastY=0, dragging=false, downTime=0, moved=false, pointerId=null;
   const THRESHOLD = 58;
@@ -468,7 +516,7 @@ function playIn(layerEl, fromDirection){
 function goTo(id){ document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function shuffle(arr){ const a = arr.slice(); for(let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 function currentEpisode(){ return state.queue[state.idx]; }
-function setBg(){ /* intentionally no-op — true black stays constant across every episode in this direction, not cycled per-episode gradients */ }
+function setBg(){ }
 
 function buildSegbar(){
   const bar = document.getElementById('segbar'); bar.innerHTML = "";
@@ -495,7 +543,6 @@ const dragZone = document.getElementById('dragZone');
 const dragLayer = document.getElementById('dragLayer');
 const stepInner = document.getElementById('stepInner');
 
-// ---------- HOOK / STORY (shared across all skill types) ----------
 function renderIntro(){
   stepState = 'hook'; setBg(); updateSegProgress(0.2);
   const meta = SKILL_META[currentEp.skillType];
@@ -508,7 +555,6 @@ function renderIntro(){
   updateBackHint();
 }
 
-// ---------- CALL (dispatches per skillType) ----------
 function renderCall(){
   if(currentEp.skillType === 'nuance'){ renderCallBaseline(); return; }
   stepState = 'call'; updateSegProgress(0.6);
@@ -524,7 +570,6 @@ function renderCall(){
       '<div class="opt-pill" id="pillB" onclick="pickChoice(\'B\')"><span class="letter">B</span><span>' + currentEp.b + '</span></div>' +
       '</div></div>';
   } else {
-    // argument / analogy / simulate share a 3-option layout
     const prompt = currentEp.skillType === 'simulate' ? currentEp.predictQ : currentEp.callPrompt;
     const claimLine = currentEp.claim ? '<div class="call-sub">' + currentEp.claim + '</div>' : '';
     let optsHtml = '';
@@ -571,7 +616,6 @@ function renderCallConditions(){
   updateBackHint();
 }
 
-// ---------- PICK HANDLERS ----------
 function pickChoice(letter){
   playPop(); state.currentChoice = letter;
   document.getElementById('pillA').classList.toggle('selected', letter==='A');
@@ -629,7 +673,6 @@ function pickPrediction(key){
   playIn(dragLayer, 'up');
 }
 
-// ---------- REVEAL RENDERERS ----------
 function flashPulse(color){
   const glow = document.querySelector('.stage-glow'); if(!glow) return;
   glow.style.transition = 'none'; glow.style.background = 'radial-gradient(circle at 50% 40%, ' + color + '99, transparent 60%)'; glow.style.opacity = '1';
@@ -735,7 +778,6 @@ function renderRevealSimulate(pickedKey, correct){
   setTimeout(() => { flashPulse(correct ? '#DFFF3C' : '#666666'); if(correct){ spawnBurst(); playChime(); } else { playMiss(); } }, 90);
 }
 
-// ---------- GESTURE WIRING ----------
 makeDragZone(dragZone, dragLayer, {
   canForward: () => stepState === 'hook' || stepState === 'reveal',
   canBackward: () => {
@@ -758,7 +800,6 @@ makeDragZone(dragZone, dragLayer, {
   }
 });
 
-// ---------- FLOW ----------
 function buildQueue(){
   const skillKeys = Object.keys(SKILL_META);
   const bySkill = {};
@@ -771,6 +812,8 @@ function buildQueue(){
 }
 
 function startExperience(){
+  const nameVal = (document.getElementById('firstNameInput').value || "").trim();
+  state.firstName = nameVal.slice(0, 24);
   state.queue = buildQueue();
   state.idx = 0; state.responses = []; state.simCorrect = 0; state.simTotal = 0;
   buildSegbar();
@@ -785,6 +828,13 @@ function advanceEpisode(){
   if(state.idx >= state.queue.length){ isTransitioning = false; viewCard(); return; }
   currentEp = currentEpisode(); renderIntro(); playIn(dragLayer, 'up');
 }
+
+function getDisplayName(){
+  if(state.testerName && state.testerName !== "You"){ return state.testerName; }
+  if(state.firstName){ return state.firstName; }
+  return null;
+}
+
 function applyTesterIdentity(rawVal){
   let clean = (rawVal || "").trim();
   if(clean && !clean.startsWith('@')){ clean = '@' + clean; }
@@ -796,36 +846,50 @@ function getRememberedHandle(){
   try{ return localStorage.getItem('wdyt_handle'); }catch(e){ return null; }
 }
 function rememberHandle(handle){
-  try{ localStorage.setItem('wdyt_handle', handle); }catch(e){ /* silently ignore -- see comment above */ }
+  try{ localStorage.setItem('wdyt_handle', handle); }catch(e){ }
 }
 
 function viewCard(){
   if(!cardFetchPromise){ cardFetchPromise = fetchCardContent(); }
-
-  if(!state.testerName){
-    const remembered = getRememberedHandle();
-    if(remembered){
-      applyTesterIdentity(remembered);
-      generateAndShowCard();
-      return;
-    }
-    document.getElementById('nameBackdrop').style.display = 'flex';
-  }
-  else { generateAndShowCard(); }
+  const remembered = getRememberedHandle();
+  applyTesterIdentity(remembered || "");
+  generateAndShowCard();
 }
 function goToPreviousEpisode(){
   if(state.idx <= 0){ isTransitioning = false; playIn(dragLayer, 'down'); return; }
   state.idx--; currentEp = currentEpisode(); renderIntro(); playIn(dragLayer, 'down');
 }
-function submitNameAndFinish(){
-  const val = document.getElementById('nameInput').value;
+function submitPostCardHandle(){
+  const val = document.getElementById('postCardHandleInput').value;
   applyTesterIdentity(val);
   rememberHandle(state.testerName);
-  document.getElementById('nameBackdrop').style.display = 'none';
-  generateAndShowCard();
+  const nameEl = document.getElementById('reportName');
+  if(nameEl){ nameEl.textContent = getDisplayName() + "'s Card"; }
+  const btn = document.getElementById('saveHandleBtn');
+  if(btn){ const original = btn.textContent; btn.textContent = "Saved \u2014 see you next time"; btn.disabled = true; btn.style.opacity = '0.7'; }
 }
 
-// ---------- STORAGE ----------
+async function submitEmailOptIn(){
+  const btn = document.getElementById('emailOptInBtn');
+  const input = document.getElementById('emailOptInInput');
+  const val = (input.value || "").trim();
+  if(!val){ return; }
+  try{
+    const response = await fetch('/api/save-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: val })
+    });
+    if(response.ok){
+      if(btn){ btn.textContent = "You're on the list"; btn.disabled = true; btn.style.opacity = '0.7'; }
+    } else {
+      if(btn){ const original = btn.textContent; btn.textContent = "Couldn't save that \u2014 try again"; setTimeout(() => { btn.textContent = original; }, 2200); }
+    }
+  }catch(e){
+    if(btn){ const original = btn.textContent; btn.textContent = "Couldn't save that \u2014 try again"; setTimeout(() => { btn.textContent = original; }, 2200); }
+  }
+}
+
 async function saveResponses(){
   try{
     const payload = {
@@ -842,10 +906,9 @@ async function saveResponses(){
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-  }catch(e){ /* silently ignore -- tracking failures should never surface to the visitor */ }
+  }catch(e){ }
 }
 
-// ---------- REPORT ----------
 function summarizeResponse(r){
   if(r.skillType==='stand'){ return "[Take a Stand] " + r.prompt + " | Chose: " + (r.finalChoice==='A'?r.optionA:r.optionB) + " | " + (r.held?"Held firm after pushback":"Changed their mind after pushback"); }
   if(r.skillType==='nuance'){ return "[Read the Nuance] " + r.prompt + " | Baseline: " + (r.baseline?"yes":"no") + " | Said this would flip them: \"" + r.pickedCondition + "\""; }
@@ -1017,9 +1080,14 @@ let lastReportForShare = null;
 
 function renderReportSkeleton(breadth, skillCounts){
   document.getElementById('reportBadge').textContent = "Your Vibe Card";
-  document.getElementById('reportName').textContent = state.testerName + "'s Card";
+  const isKnownIdentity = state.testerName && state.testerName !== "You";
+  const displayName = getDisplayName();
+  document.getElementById('reportName').textContent = displayName ? (displayName + "'s Card") : "Your Vibe Card";
   document.getElementById('reportMeta').textContent = state.responses.length + " situations explored \u00b7 " + new Date().toLocaleDateString();
   document.getElementById('reportSkillLine').textContent = Object.keys(SKILL_META).map(k => SKILL_META[k].icon).join(' ') + "  all five skills practiced";
+
+  const saveSection = document.getElementById('saveHandleSection');
+  if(saveSection){ saveSection.style.display = isKnownIdentity ? 'none' : 'block'; }
 
   document.getElementById('archetypeTitle').innerHTML = '<span class="skeleton skel-archetype-title"></span>';
   document.getElementById('archetypeSub').innerHTML =
@@ -1104,10 +1172,10 @@ function hydrateReportWithAI(breadth, skillCounts){
   });
 }
 
-// ---------- SHARE ----------
 function buildShareText(){
   const r = lastReportForShare;
-  let lines = [state.testerName + "'s Vibe Card \ud83e\udde0"];
+  const displayName = getDisplayName();
+  let lines = [(displayName ? displayName + "'s Vibe Card" : "My Vibe Card") + " \ud83e\udde0"];
   if(r && r.archetype){ lines.push(r.archetype.title); }
   lines.push(state.responses.length + " situations explored across 5 skills", "");
   if(r && r.whereIStand && r.whereIStand.length){
@@ -1118,7 +1186,9 @@ function buildShareText(){
   return lines.join('\n');
 }
 async function shareReport(){
-  const text = buildShareText(); const title = state.testerName + "'s Vibe Card";
+  const text = buildShareText();
+  const displayName = getDisplayName();
+  const title = displayName ? (displayName + "'s Vibe Card") : "My Vibe Card";
   if(navigator.share){ try{ await navigator.share({ title:title, text:text }); }catch(e){} }
   else {
     try{
